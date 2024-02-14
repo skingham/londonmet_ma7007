@@ -7,20 +7,6 @@ output: html_notebook
 # installed.packages()
 library(ggplot2)
 library(gamlss)
-## Loading required package: splines
-## Loading required package: gamlss.data
-##
-## Attaching package: ’gamlss.data’
-## The following object is masked from ’package:datasets’:
-##
-##     sleep
-## Loading required package: gamlss.dist
-## Loading required package: MASS
-## Loading required package: nlme
-## Loading required package: parallel
-##  **********   GAMLSS Version 5.4-12  **********
-## For more on GAMLSS look at https://www.gamlss.com/
-## Type gamlssNews() to see new features/changes/bug fixes.
 library(nnet)
 search()
 ```
@@ -45,6 +31,7 @@ ls()
 ```{r}
 ??"neural network"
 ```
+
 ```{r}
 help(package="nnet")
 help(package="ggplot2")
@@ -72,6 +59,7 @@ x1 <- rnorm(1000)
 class(x1)
 plot(x1)
 hist(x1)
+
 library(MASS)
 truehist(x1)
 lines(density(x1)) 
@@ -227,7 +215,8 @@ my.mean <- function(x) {
 }
 my.mean(x1)
 
-my.mean(f)
+# ‘sum’ not meaningful for factors
+# my.mean(f)
 
 my.mean1 <- function(x) {
   if (!is.numeric(x)) stop("the argument is not numeric") 
@@ -237,8 +226,10 @@ my.mean1 <- function(x) {
 
 my.mean1(x1)
 
-my.mean1(f)
+# Error in my.mean1(f) : the argument is not numeric
+# my.mean1(f)
 ```
+
 ```{r}
 library(gamlss)
 library(gamlss.data)
@@ -254,7 +245,14 @@ p <- ggplot(dbbmi, aes(x = bmi)) +
   theme_minimal() +
   labs(title = "BMI Distribution by Age", x = "BMI", y = "Frequency")
 
-# Display the plot
+# Display the plotgit
 print(p)
+```
+```{r}
+library(gamlss)
+r1 <- gamlss(R ~ Fl+A+H+loc, family=NO, data=rent)
+l1 <- lm(R ~ Fl+A+H+loc, data=rent)
+coef(r1)
+coef(l1)
 ```
 

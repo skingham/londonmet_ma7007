@@ -1,0 +1,40 @@
+---
+title: "Week 2 GAMLSS Tutorial"
+output: html_notebook
+---
+
+
+```{r}
+library(dplyr)
+data()
+data(mtcars)
+summarize(mtcars)
+mtcars %>%
+  group_by(cyl) %>%
+  summarize(average_mpg = mean(mpg, na.rm = TRUE))
+```
+
+
+Use GAMLSS to fit a model
+
+```{r}
+library(gamlss)
+
+m0 <- gamlss(mpg~wt, data=mtcars)
+plot(mpg~wt, data=mtcars, col="lightgrey", lty=4)
+lines(fitted(m0)~mtcars$wt)
+
+
+m00 <- gamlss(mpg~wt+I(wt^2), data=mtcars)
+plot(mpg~wt, data=mtcars, col="lightgrey", lty=4)
+lines(fitted(m00)~mtcars$wt)
+```
+
+
+```{r}
+library(corrplot)
+op <- par(mfrow=c(1,2))
+corrplot(vcov(m00, type="cor"))
+corrplot(vcov(m0, type="cor"))
+```
+
