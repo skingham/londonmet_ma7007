@@ -1,0 +1,705 @@
+---
+title: "MA7007 Introduction"
+output: html_notebook
+---
+
+Intro_R.r
+
+```{r}
+
+#-------------------------------------------------------------------------------
+# Introduction to R
+#-------------------------------------------------------------------------------
+
+# To clear workspace: press ctrl L
+
+# To clear history from R environment 
+rm(list=ls(all=TRUE))
+
+# R is working with objects. Objects (scalars, vectors, matrices, lists)
+# can be created with the <- operator (or =).
+
+# Scalars
+x <- 10
+x
+y <- 20
+y
+
+x+y
+x-y
+x*y
+x^2
+x/y
+
+#-------------------------------------------------------------------------------
+# Vectors
+x <- 1:10
+x
+# [1]  1  2  3  4  5  6  7  8  9 10
+
+y <- x + 5
+y
+# [1]  6  7  8  9 10 11 12 13 14 15
+
+x+y
+# [1]  7  9 11 13 15 17 19 21 23 25
+
+x-y
+# [1] -5 -5 -5 -5 -5 -5 -5 -5 -5 -5
+
+x*y
+# [1]   6  14  24  36  50  66  84 104 126 150
+
+x/y
+# [1] 0.1666667 0.2857143 0.3750000 0.4444444 0.5000000
+# [5] 0.5454545 0.5833333 0.6153846 0.6428571 0.6666667
+
+x^2
+# [1]   1   4   9  16  25  36  49  64  81 100
+
+#-------------------------------------------------------------------------------
+# Simple Mathematical Functions
+exp(x)
+# [1]     2.718282     7.389056    20.085537    54.598150   148.413159
+# [5]   403.428793  1096.633158  2980.957987  8103.083928 22026.465795
+
+sqrt(x)
+# [1] 1.000000 1.414214 1.732051 2.000000 2.236068
+# [5] 2.449490 2.645751 2.828427 3.000000 3.162278
+
+abs(x)
+# [1]  1  2  3  4  5  6  7  8  9 10
+
+factorial(x)
+# [1]       1       2       6      24     120
+# [5]     720    5040   40320  362880 3628800
+
+log(x)
+# [1] 0.0000000 0.6931472 1.0986123 1.3862944 1.6094379
+# [5]1.7917595 1.9459101 2.0794415 2.1972246 2.3025851
+
+pi
+# [1] 3.141593
+
+x <- c(0.5, 1.2, 1.88, 3.2, 4.5)
+x
+# [1] 0.50 1.20 1.88 3.20 4.50
+
+ceiling(x)
+# [1] 1 2 2 4 5
+
+floor(x)
+# [1] 0 1 1 3 4
+
+round(x, 2)
+# [1] 0.50 1.20 1.88 3.20 4.50
+
+round(exp(x), 3)
+#[1]  1.649  3.320  6.554 24.533 90.017
+
+x <- c(-100, 0, 50)
+#[1] -100    0   50
+
+sign(x)
+#[1] -1  0  1
+
+#-------------------------------------------------------------------------------
+# Matrices
+A <- matrix(1:9, nrow = 3, ncol=3, byrow=TRUE)
+A
+#       [,1] [,2] [,3]
+# [1,]    1    2    3
+# [2,]    4    5    6
+# [3,]    7    8    9
+
+# Subscription of matrix columns
+A[,1]
+# [1] 1 4 7
+
+A[,2]
+# [1] 2 5 8
+
+A[,3]
+# [1] 3 6 9
+
+# Subscription of matrix rows
+A[1,]
+# [1] 1 2 3
+
+A[2,]
+# [1] 4 5 6
+
+A[3,]
+# [1] 7 8 9
+
+# Subscription of matrix elements
+A[1,1]
+# [1] 1
+
+A[2,3]
+# [1] 6
+ 
+
+B <- matrix(11:19, nrow = 3, ncol=3, byrow=TRUE)
+B
+#      [,1] [,2] [,3]
+# [1,]   11   12   13
+# [2,]   14   15   16
+# [3,]   17   18   19
+
+
+A+B
+#      [,1] [,2] [,3]
+# [1,]   12   14   16
+# [2,]   18   20   22
+# [3,]   24   26   28
+
+B-A
+#      [,1] [,2] [,3]
+# [1,]   10   10   10
+# [2,]   10   10   10
+# [3,]   10   10   10
+
+# Element by Element Matrix Multiplication, A[i,j] * B[i,j]
+A*B
+#      [,1] [,2] [,3]
+# [1,]   11   24   39
+# [2,]   56   75   96
+# [3,]  119  144  171
+
+# Element by Element Matrix Power, B[i,j] ^ A[i,j]
+B^A
+#           [,1]        [,2]         [,3]
+# [1,]        11         144         2197
+# [2,]     38416      759375     16777216
+# [3,] 410338673 11019960576 322687697779
+
+# Matrix Multiplication
+A%*%B
+#      [,1] [,2] [,3]
+# [1,]   90   96  102
+# [2,]  216  231  246
+# [3,]  342  366  390
+
+exp(A)
+#             [,1]        [,2]       [,3]
+# [1,]    2.718282    7.389056   20.08554
+# [2,]   54.598150  148.413159  403.42879
+# [3,] 1096.633158 2980.957987 8103.08393
+
+sqrt(A)
+#          [,1]     [,2]     [,3]
+# [1,] 1.000000 1.414214 1.732051
+# [2,] 2.000000 2.236068 2.449490
+# [3,] 2.645751 2.828427 3.000000
+
+# Diagonal of matrix A
+diag(A)
+# [1] 1 5 9
+
+# Defining an Identity matrix
+C = diag(3)
+C
+#      [,1] [,2] [,3]
+# [1,]    1    0    0
+# [2,]    0    1    0
+# [3,]    0    0    1
+ 
+# Means per row
+apply(A, 1, mean)
+# [1] 2 5 8
+
+# Means per column
+apply(A, 2, mean)
+
+# cumsum
+apply(A, 1, cumsum)
+apply(A, 2, cumsum)
+
+# Arrays 
+A <- matrix(c(1, 2, 3, 4), nrow = 2, ncol=2, byrow=FALSE)
+A
+#      [,1] [,2]
+# [1,]    1    3
+# [2,]    2    4
+
+B <- matrix(c(5, 6, 7, 8), nrow = 2, ncol=2, byrow=FALSE)
+B
+#      [,1] [,2]
+# [1,]    5    7 
+# [2,]    6    8
+
+C <- matrix(c(9, 10, 11, 12), nrow = 2, ncol=2, byrow=FALSE)
+#      [,1] [,2]
+# [1,]    9   11
+# [2,]   10   12
+
+Z <- c(A,B,C)
+# [1]  1  2  3  4  5  6  7  8  9 10 11 12
+
+W <- array(Z, dim=c(2, 2, 3))
+W
+
+# , , 1
+
+#      [,1] [,2]
+# [1,]    1    3
+# [2,]    2    4
+
+#, , 2
+
+#      [,1] [,2]
+# [1,]    5    7
+# [2,]    6    8
+
+# , , 3
+
+#     [,1] [,2]
+# [1,]    9   11
+# [2,]   10   12
+
+W[1,,]
+#     [,1] [,2] [,3]
+# [1,]    1    5    9
+# [2,]    3    7   11
+
+W[,1,]
+#      [,1] [,2] [,3]
+# [1,]    1    5    9
+# [2,]    2    6   10
+
+W[,,1]
+#      [,1] [,2]
+# [1,]    1    3
+# [2,]    2    4
+
+
+#-------------------------------------------------------------------------------
+# Lists
+X <- NULL
+X[[1]] <- 1:5
+X[[2]] <- 11:20
+X
+# [[1]]
+# [1] 1 2 3 4 5
+
+# [[2]]
+# [1] 11 12 13 14 15 16 17 18 19 20
+
+X[[1]][3:5]
+X[[2]][3:5]
+
+    
+#-------------------------------------------------------------------------------
+# Statistical Functions
+set.seed(12345)
+x <- rnorm(100)
+x
+#  [1]  0.58552882  0.70946602 -0.10930331 -0.45349717  0.60588746
+#  [6] -1.81795597  0.63009855 -0.27618411 -0.28415974 -0.91932200
+# [11] -0.11624781  1.81731204  0.37062786  0.52021646 -0.75053199
+# [16]  0.81689984 -0.88635752 -0.33157759  1.12071265  0.29872370
+# [21]  0.77962192  1.45578508 -0.64432843 -1.55313741 -1.59770952
+# [26]  1.80509752 -0.48164736  0.62037980  0.61212349 -0.16231098
+# [31]  0.81187318  2.19683355  2.04919034  1.63244564  0.25427119
+# [36]  0.49118828 -0.32408658 -1.66205024  1.76773385  0.02580105
+# [41]  1.12851083 -2.38035806 -1.06026555  0.93714054  0.85445172
+# [46]  1.46072940 -1.41309878  0.56740325  0.58318765 -1.30679883
+# [51] -0.54038607  1.94769266  0.05359027  0.35166284 -0.67097654
+# [56]  0.27795369  0.69117127  0.82379533  2.14506502 -2.34694398
+# [61]  0.14959198 -1.34253148  0.55330308  1.58996284 -0.58687959
+# [66] -1.83237731  0.88813943  1.59348847  0.51685467 -1.29567168
+# [71]  0.05461558 -0.78464937 -1.04935282  2.33051196  1.40270538
+# [76]  0.94260085  0.82625829 -0.81154049  0.47624828  1.02125841
+# [81]  0.64538307  1.04314355 -0.30436911  2.47711092  0.97122067
+# [86]  1.86709918  0.67204247 -0.30795338  0.53652372  0.82487007
+# [91] -0.96390148 -0.85508251  1.88694694 -0.39181937 -0.98063295
+# [96]  0.68733210 -0.50504352  2.15771982 -0.59979756 -0.69454669
+
+mean(x)     
+# [1] 0.2451972
+ 
+median(x)
+# [1] 0.4837183
+
+max(x)
+# [1] 2.477111
+
+min(x)
+# [1] -2.380358
+
+var(x)
+# [1] 1.242625             
+
+# quantile(x, probs)
+quantile(x, c(0.25, 0.50, 0.75))
+#     25%        50%        75% 
+# -0.5901091  0.4837183  0.9003897
+
+#Interquantile range
+quantile(x,0.75) - quantile(x,0.25) 
+
+# Semi-interquantile range
+(quantile(x,0.75) - quantile(x,0.25))/2
+
+#-------------------------------------------------------------------------------
+# Correlation and Covariance
+set.seed(12345)
+x <- rnorm(100)
+y <- x + rnorm(length(x))
+
+cor(x,y)
+# [1] 0.7716394
+
+cov(x,y)
+# [1]  1.360096
+
+
+#-------------------------------------------------------------------------------
+x <- c(1:5, 3:8)
+# [1] 1 2 3 4 5 3 4 5 6 7 8
+
+rank(x)            
+# [1]  1.0  2.0  3.5  5.5  7.5  3.5  5.5  7.5  9.0 10.0 11.0
+
+table(x)
+# x
+# 1 2 3 4 5 6 7 8 
+# 1 1 2 2 2 1 1 1
+
+#-------------------------------------------------------------------------------
+# If
+x <- -5
+if (x>=0) z <- 1  else  z <- 0
+z
+# [1] 0
+
+x <- c(-10, 0, 10)
+z <- NULL
+
+#-------------------------------------------------------------------------------
+# For Loop
+x <- c(-10, 0, 10)
+for (i in 1:length(x)) 
+{
+	if (x[i]>0) z[i] <- 1  else  z[i] <- 0
+}
+z	
+# [1] 0 0 1
+ 
+#-------------------------------------------------------------------------------
+# Writing Simple Functions
+xsquare <- function(x)
+{
+	xsquare <- x^2
+    return(xsquare)
+}
+
+xsquare
+# function(x)
+# {
+# 	xsquare <- x^2
+#   return(xsquare)
+# }
+
+xsquare(2)
+# [1] 4
+
+x <- 1:10
+xsquare(x)
+# [1]   1   4   9  16  25  36  49  64  81 100
+
+x <- 1:10
+xsq <- x^2
+xsq
+# [1]   1   4   9  16  25  36  49  64  81 100
+
+x <- 1:10
+xsq <- NULL
+for (i in 1:length(x)) 
+{
+   	xsq[i] <- x[i]^2
+}
+xsq  
+# [1]   1   4   9  16  25  36  49  64  81 100
+
+#-------------------------------------------------------------------------------
+# Write a function to evaluate f(x,y,z) = (x+y)^z
+fun1 <- function(x,y,z)
+{
+   	fun1 <- (x+y)^z
+    return(fun1)
+}
+
+x <- 1:10
+# [1]  1  2  3  4  5  6  7  8  9 10
+
+y <- 11:20
+# [1] 11 12 13 14 15 16 17 18 19 20
+
+z <- 2
+# [1] 2
+
+fun1(x,y,z)
+# [1] 144 196 256 324 400 484 576 676 784 900
+
+#-------------------------------------------------------------------------------
+# Simulation and Simple Graphics
+n <- 100000
+x <- rnorm(n)
+hist(x, col='blue', main='Histogram Of Simulated Data From Normal(0,1)')
+summary(x)
+
+x <- rnorm(10000000)
+plot(density(x), main='Density Estimation Of Normal(0,1)')
+
+n <- 100000
+x <- rnorm(n,10,2)
+hist(x, col='blue', main='Histogram Of Simulated Data From Normal(10,2)')
+summary(x)
+
+x <- runif(100000)
+hist(x, col='blue', main='Histogram Of Simulated Data From Uniform(0,1)')
+summary(x)
+
+x <- rgamma(100000,1,3)
+hist(x,col='blue', main='Histogram Of Simulated Data From Gamma(1,3)')
+summary(x)
+
+x <- rbeta(100000,1,5)
+hist(x,col='blue', main='Histogram Of Simulated Data From Beta(1,5)')
+summary(x)
+
+x <- rexp(100000,0.1)
+hist(x,col='blue', main='Histogram Of Simulated Data From Exp(0.1)')
+summary(x)
+
+x <- rpois(100000,0.50)
+hist(x,col='blue', main='Histogram Of Simulated Data From Poisson(0.20)')
+summary(x)
+table(x)
+
+x <- rpois(100000,2)
+hist(x,col='blue', main='Histogram Of Simulated Data From Poisson(2)')
+summary(x)
+table(x)
+
+x <- rgeom(100000,0.1)
+hist(x,col='blue', main='Histogram Of Simulated Data From Geometric(0.1)')
+summary(x)
+table(x)
+
+x <- rnbinom(100000, mu=1.5, size=1.0)
+hist(x,col='blue', 
+     main='Histogram Of Simulated Data From NegBin(mu=2,theta=5)')
+summary(x)
+table(x)
+
+#-------------------------------------------------------------------------------
+# dnorm, pnorm, qnorm, rnorm
+x <- seq(-5, 5, 0.0001)
+dfx <-dnorm(x, 0, 1, log = FALSE)
+plot(dfx, t='l')
+
+pnorm(0,0,1)
+# [1] 0.5
+
+x <- seq(-0.5, 0.5, 0.5)
+x
+# [1] -0.5  0.0  0.5
+
+round(pnorm(x, 0, 1), 4)
+# [1] 0.3085 0.5000 0.6915
+
+x <- c(0.025, 0.05, 0.25, 0.50, 0.75, 0.95, 0.975)
+# [1] 0.025 0.050 0.250 0.500 0.750 0.950 0.975
+round(qnorm(x,0,1), 4)
+# [1] -1.9600 -1.6449 -0.6745  0.0000  0.6745  1.6449  1.9600
+
+x <- rnorm(100000)
+plot(ecdf(x),main='Empirical cumulative distribution function')
+
+curve(dnorm(x,m=0,sd=1),from=-6,to=6,main="Normal distribution")
+
+x <- rnorm(10000)
+qqnorm(x)
+
+x <- rnorm(10000, 10, 2)
+z <- (x-mean(x))/sd(x)
+qqnorm(z)
+abline(0,1)
+```
+
+
+charts.R
+
+```{r}
+install.packages("plotrix")
+library(plotrix)
+
+#=======================================
+# Pie Chart, Bar Chart, Histogram
+#=======================================
+
+##Pie Chart with annotated %
+#=======================================
+slices <- c(12, 18, 5, 10)
+names <- c("A", "B", "AB", "O")
+percent <- round(slices/sum(slices)*100)
+names <- paste(names, percent)
+names <- paste(names,"%",sep="")
+pie(slices,labels = names, col=rainbow(length(names)),
+    main="Pie Chart of Blood Group")
+
+
+# 3D Pie Chart
+#=============
+
+slices <- c(12, 18, 5, 10)
+names <- c("A", "B", "AB", "O")
+pie3D(slices,labels=names,explode=0.1,
+      main="Pie Chart of Blood Group")
+
+# Bar Chart
+#==============
+# Simple Bar Chart
+
+# Create the data for the chart
+Income <- c(4,6,12,8,5,18,14,9,7,4,3,1)
+# assign/give names
+Month <- c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sept",
+       "Oct","Nov","Dec")
+# Plot the bar chart 
+barplot(Income,names.arg=Month,xlab="Month",ylab="Income",col="blue",
+        main="Family's Monthly Income",border="red")
+
+# Stacked Bar Chart
+
+# Create the input vectors.
+colors = c("green","blue","red")
+blood_group <- c("A","B","AB","O")
+class <- c("Children","Youth","Adult")
+
+# Create the matrix of the values.
+patients <- matrix(c(2,9,11,8,10,11,9,4,8,7,12,5),
+                 nrow = 3, ncol = 4, byrow = TRUE)
+# Create the bar chart
+barplot(patients, main = "Blood Group of Patients", 
+        names.arg = blood_group, xlab = "Blood Group", 
+        ylab = "No of Patients", col = colors)
+
+# Add the legend to the chart
+#legend("topleft", class, cex = 1.3, fill = colors)
+
+# Histogram
+#==================
+
+# enter the values in R
+Age_in_years<-c(60,68,63,56,90,64,74,57,65,85,83,88,74,60,
+          85,72,89,64,65,75,65,70,66,65,55,75,82,54,
+          60,68,60,59,55,52,55,60,57,80,45,44,57,80,
+          53,56,55,57,55,48,60,82,65,45,49,55,75,62,
+          60,60,68,58,48,60,62,70,56,49,60,50,76,54,
+          74,66,48,51,55,50,69,52,42,50,65,58,54)
+# Draw the histogram
+hist(Age_in_years)
+
+# Draw a colored histogram with specifications
+hist(Age_in_years,
+     main="Age of Patients in a Doctor's Clinic",
+     xlab="Age of Patients (in Years)",
+     xlim=c(40,90),
+     col="darkmagenta",
+     freq=TRUE)
+```
+
+Simple_Linear_Regression_in_R.R
+
+```{r}
+
+##=================================================
+# Simple Linear Regression
+##=================================================
+
+## The data regarding the production of wheat in tons (x) and the price of the
+## kilo of flour in pounds (y ) in a given country.
+
+## To read x and y in R
+
+x<-c(30, 28, 32, 25, 25, 25, 22, 24, 35, 40)
+x
+y<-c(25, 30, 27, 40, 42, 40, 50, 45, 30, 25)
+y
+
+# To compute the correlation coefficient in R
+
+r_xy<-cor(x,y)
+r_xy
+
+# To fit the regression model in R
+
+model<-lm(y~x)
+
+# To obtain the regression coefficients (the intercept and slope), and other measures
+
+summary(model)
+
+# To obtain the fitted values in R
+
+residuals(lm(y~x))
+
+# To perform stepwise variable selection in R
+
+step(model)
+ 
+
+layout(matrix(c(1,1,2,3),2,2,byrow=T))
+# Wheat Production x Residuals Plot
+
+plot(resid(model),
+     main="Wheat Production x Residuals\nfor Simple Regression",
+     xlab="Wheat Production", ylab="Residuals")
+abline(h=0,lty=2)
+
+# Histogram of Residuals
+
+hist(model$resid, main="Histogram of Residuals",
+     ylab="Residuals")
+
+## Q-Q Plot
+
+qqnorm(model$resid)
+qqline(model$resid)
+
+## To read x and y in R
+
+x<-c(30, 28, 32, 25, 25, 25, 22, 24, 35, 40)
+x
+y<-c(25, 30, 27, 40, 42, 40, 50, 45, 30, 25)
+y
+
+# To normalize x and y in R
+
+x1<-rnorm(x)
+x1
+y1<-rnorm(y)
+y1
+
+# To obtain a scattered plot in R
+
+plot(x1,y1)
+
+# To fit the regression line (line of best fit) in R
+
+abline(lm(y1~x1))
+
+# Plot the histogram for y1
+
+hist(y1, main = "Normal DIstribution")
+
+# To perform normality test in R: Shapiro-Wilk
+
+shapiro.test(x1)
+
+shapiro.test(y1)
+```
