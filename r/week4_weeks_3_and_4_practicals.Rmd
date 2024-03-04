@@ -1,0 +1,30 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+[R Markdown](http://rmarkdown.rstudio.com)
+*Run*             *Ctrl+Shift+Enter*. 
+*Insert Chunk*    *Ctrl+Alt+I*.
+*Preview*         *Ctrl+Shift+K*
+
+# weeks_3_and_4_practicals.pdf
+
+
+## 3 The abdom data.
+
+R data file: abdom in package gamlss.data of dimensions 610 × 2
+variables
+y : abdominal circumference
+x : gestational age
+purpose: to demonstrate the fitting of a simple regression type model in GAMLSS
+
+```{r}
+data(abdom)
+colnames(abdom)
+summary(abdom)
+```
+Fit the normal distribution model, using pb() to fit P-spline smoothers for the predictors for μ and σ with automatic selection of smoothing parameters:
+
+```{r}
+mNO<- gamlss(y~pb(x), sigma.fo=~pb(x), data=abdom, family=NO)
+```

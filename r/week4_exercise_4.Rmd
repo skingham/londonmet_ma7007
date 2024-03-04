@@ -1,0 +1,103 @@
+---
+title: "Week 4 Tutorial"
+output: html_notebook
+---
+
+[R Markdown](http://rmarkdown.rstudio.com)
+*Run*             *Ctrl+Shift+Enter*. 
+*Insert Chunk*    *Ctrl+Alt+I*.
+*Preview*         *Ctrl+Shift+K*
+
+# Exercise 4:
+
+The R code provided performs several tasks related to statistical modeling and analysis, particularly focusing on the use of generalized additive models for location, scale, and shape (GAMLSS) and truncated distributions. Here's a breakdown of its main components and actions:
+
+1. **Installation and Loading of Packages**: The script begins by attempting to install the `gamlss.inf` package, which is likely a typo or a custom function not standard in R, as the correct function to install packages is `install.packages()`. Then, it defines new family distributions and truncated distributions using functions like `gen.Family()`, `gen.Inf0to1()`, and `gen.trun()`.
+
+2. **Setting Seed for Reproducibility**: `set.seed(10)` ensures that any random operations can be replicated in future runs.
+
+3. **Loading the `gamlss.tr` Library and Data**: It loads the `gamlss.tr` library, which is used for fitting truncated and censored distributions in the GAMLSS framework. It then loads the `tensile` dataset, which is likely used for modeling.
+
+4. **Generation of Truncated Distributions**: The script generates truncated versions of various distributions (`GA`, `LOGNO`, `TF`) with specified parameters.
+
+5. **Fitting Distributions to Data**: It attempts to fit different truncated distributions to the `tensile` dataset using a custom function `fitDist()`, which is not standard in R and is presumably defined elsewhere or is part of a loaded package.
+
+6. **Creating and Modeling Inflated Distributions**: The script generates data from an inflated distribution (at zero for `logitSST` and at one for `BEINF1`) and fits GAMLSS models to this data. This part includes examples of fitting distributions with inflation at specific points (0 or 1), showcasing the flexibility of GAMLSS in handling complex distributional forms.
+
+7. **Model Comparisons and Checks**: It compares the deviances of different model fits to check for consistency or equivalence, using `stopifnot()` to assert that certain conditions are true. This is a method to ensure that the models are performing as expected.
+
+8. **Additional Data Analysis with Another Dataset (`glass`)**: The script performs similar actions as above but with a different dataset, `glass`, focusing on fitting distributions and analyzing the `strength` variable. It includes generating a truncated distribution, fitting a distribution, and visualizing the distribution of `strength` using a histogram.
+
+Overall, the script showcases advanced usage of the GAMLSS framework for modeling complex data distributions, including truncated and inflated-at-specific-points distributions. It performs data fitting, model checking, and visualization tasks, although it assumes the presence of certain custom functions or packages (`fitDist()`, `gamlss.inf`, etc.) that are not standard in R's base or commonly used packages.
+
+```{r}
+library(gamlss);
+library(gamlss.inf);
+```
+
+
+
+```{r}
+gen.Family("SST", "logit")
+gen.Inf0to1("logitSST","Zero")
+set.seed(10)
+```
+
+
+```{r}
+library(gamlss.tr)
+data(tensile)
+```
+
+```{r}
+gen.trun(par=1,family="GA", type="right")
+gen.trun(par=1,"LOGNO", type="right")
+gen.trun(par=c(0,1),"TF", type="both")
+ma<-fitDist(str, type="real0to1", trace=T, extra=c("GAtr", "LOGNOtr", "TFtr"), data=tensile)
+Y <- rlogitSSTInf0(300,mu=0.5,sigma=0.7,nu=0.5,tau=5,xi0=0.5,log=FALSE)
+m1 <- gamlssInf0to1(y=Y, mu.formula=~1,
+                    sigma.formula=~1,
+                    nu.formula=~1,
+                    tau.formula=~1,
+                    xi0.formula=~1,
+                    family=logitSST,
+                    trace = TRUE)
+#
+```
+
+### 2. Example of equivalent gamlss models for an inflated-at-1 Beta distribution
+
+
+```{r}
+Y <- rBEINF1(500,mu=0.5,sigma=0.7,nu=0.5)
+m2 <- gamlss(Y~1,sigma.formula=~1,nu.formula=~1,family=BEINF1)
+m3.1 <- gamlss(Y[Y<1]~1,sigma.formula=~1,family=BE)
+m3.2 <- gamlss(I(Y==1)~1,family=BI)
+m4 <- gamlssInf0to1(Y,mu.formula=~1,sigma.formula=~1,xi1=~1,family=BE)
+
+stopifnot(all.equal(deviance(m2),(deviance(m3.1)+deviance(m3.2))),
+          all.equal(deviance(m2),deviance(m4)))
+```
+
+# fitting truncated
+
+```{r}
+data(glass)
+library(gamlss.tr)
+gen.trun(par = 0, family = TF)
+```
+
+```{r}
+m1<-fitDist(strength, data=glass, k=2, extra="TFtr")
+```
+# AIC
+# SBC
+
+```{r}
+m1$fit[1:8]
+histDist(glass$strength, SEP4, nbins = 13,
+         main = "SEP4 distribution",
+         method = mixed(20, 50))
+```
+
+
