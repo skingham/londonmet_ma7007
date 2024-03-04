@@ -1,0 +1,163 @@
+---
+title: "Week 5 Tutorial"
+output: html_notebook
+---
+
+[R Markdown](http://rmarkdown.rstudio.com)
+*Run*             *Ctrl+Shift+Enter*. 
+*Insert Chunk*    *Ctrl+Alt+I*.
+*Preview*         *Ctrl+Shift+K*
+
+
+This script is a robust example of using R for statistical analysis, emphasizing model fitting, selection, and visualization in biomedical data analysis. It demonstrates how to approach data with complex nonlinear relationships using various statistical modeling techniques to identify the best explanatory model.
+
+This R script is a comprehensive example of data manipulation, statistical modeling, and visualization in the context of analyzing CD4 cell counts across different ages, using the `gamlss` package in R. Here's a detailed breakdown of its components:
+
+1. **Clear Workspace and Load Libraries**: The script starts by clearing the R environment to ensure a fresh workspace and then loads the `gamlss` library, which is essential for fitting generalized additive models for location, scale, and shape.
+
+```{r}
+rm(list=ls())
+ls()
+library(gamlss);
+```
+
+2. **Data Exploration**:
+   - The script initially interacts with an `aids` dataset for some basic manipulations, but the main focus is on the `CD4` dataset. It displays the first few entries of the `CD4` data to understand its structure.
+
+```{r}
+data(aids)
+head(with(aids,model.matrix(~x+qrt)))
+
+
+f1<-gl(2,1,24)
+levels(f1) <- c("A", "B") 
+f1
+f2<-gl(3,2,24)
+f2
+head(model.matrix(~f1*f2), 10)
+
+data(aids)
+head(with(aids,model.matrix(formula(~x*qrt))), 10)
+#######################################################
+data(CD4)
+head(CD4)
+```
+
+3. **Data Visualization**:
+   - It uses the `ggplot2` library to create a scatter plot (`pp`) of CD4 cell counts (`cd4`) against age (`age`).
+
+```{r}
+library(ggplot2)
+
+pp<-ggplot(data=CD4, aes(x=age, y=cd4))+geom_point()
+pp
+```
+
+4. **Model Fitting**:
+   - Various models are fitted to the data to understand the relationship between age and CD4 cell counts. These models include polynomial terms of age (up to the third degree initially), polynomial models with varying degrees, and models using different basis functions for age:
+     - Simple polynomial terms (`age`, `age^2`, `age^3`).
+     - Orthogonal polynomials (`poly(age, degree)`).
+     - Flexible polynomials using penalization (`fp(age, degree)`).
+     - B-splines (`bs(age, df=degree)`).
+     - Penalized B-splines (`pb(age)`).
+     - Fractional polynomials (`fk(age, degree)`).
+
+
+```{r}
+# Simple polynomial terms (`age`, `age^2`, `age^3`).
+m0 <- gamlss(cd4~age+I(age^2)+I(age^3), data=CD4)
+
+pp1<- pp+geom_line(aes(x=age, y=fitted(m0)))
+
+pp1
+```
+
+
+
+
+5. **Model Comparison**:
+   - The script compares these models using the Akaike Information Criterion (AIC) to select the best-fitting model based on the trade-off between model complexity and goodness of fit.
+
+
+```{r}
+# Orthogonal polynomials (`poly(age, degree)`).
+m1 <- gamlss(cd4~poly(age,3), data=CD4)
+
+pp+geom_line(aes(x=age, y=fitted(m1), col="red"))
+
+l1 <- gamlss(cd4~poly(age,1), data=CD4)
+l2 <- gamlss(cd4~poly(age,2), data=CD4)
+l3 <- gamlss(cd4~poly(age,3), data=CD4)
+l4 <- gamlss(cd4~poly(age,4), data=CD4)
+l5 <- gamlss(cd4~poly(age,5), data=CD4)
+l6 <- gamlss(cd4~poly(age,6), data=CD4)
+l7 <- gamlss(cd4~poly(age,7), data=CD4)
+l8 <- gamlss(cd4~poly(age,8), data=CD4)
+l9 <- gamlss(cd4~poly(age,9), data=CD4)
+
+AIC(l1, l2, l3,l4, l5,l6,l7,l8,l9)
+AIC(l1, l2, l3,l4, l5,l6,l7,l8,l9, k=log(dim(CD4)[1]))
+
+pp+geom_line(aes(x=age, y=fitted(l7)), col="blue")
+```
+
+
+6. **Visualization of Model Fits**:
+   - It then overlays the fitted models on the scatter plot created earlier to visually compare how well each model fits the data. This is done through lines representing the fitted values from each model against age, with different models possibly colored differently for distinction.
+
+```{r}
+# Flexible polynomials using penalization (`fp(age, degree)`).
+# fp() is not used for fitting the fractional polynomial curves but assigns 
+# the attributes to the vector to aid gamlss in the fitting process
+fp_1<- gamlss(cd4~fp(age,1), data=CD4)
+fp_2<- gamlss(cd4~fp(age,2), data=CD4)
+fp_3<- gamlss(cd4~fp(age,3), data=CD4)
+AIC(fp_1, fp_2, fp_3)
+
+pp+geom_line(aes(x=age, y=fitted(fp_3)), col="blue")
+```
+
+```{r}
+library(gamlss.add)
+
+# Fractional polynomials (`fk(age, degree)`).
+fk_1<- gamlss(cd4~fk(age,1), data=CD4)
+pp+geom_line(aes(x=age, y=fitted(fk_1)), col="blue")
+```
+
+
+```{r}
+# B-splines (`bs(age, df=degree)`).
+b3 <- gamlss(cd4~bs(age,df=3), data=CD4)
+b4 <- gamlss(cd4~bs(age,df=4), data=CD4)
+b5 <- gamlss(cd4~bs(age,df=5), data=CD4)
+b6 <- gamlss(cd4~bs(age,df=6), data=CD4)
+b7 <- gamlss(cd4~bs(age,df=7), data=CD4)
+b8 <- gamlss(cd4~bs(age,df=8), data=CD4)
+b9 <- gamlss(cd4~bs(age,df=9), data=CD4)
+AIC(b3,b4,b5,b6,b7,b8,b9)
+
+pp+geom_line(aes(x=age, y=fitted(b7)), col="blue")
+```
+
+```{r}
+# Penalized B-splines (`pb(age)`).
+c1 <- gamlss(cd4~pb(age), data=CD4)
+pp+geom_line(aes(x=age, y=fitted(c1)), col="blue")
+```
+
+```{r}
+# fk_1: Fractional polynomials (`fk(age, degree=1)`).
+# c1: Penalized B-splines (`pb(age)`).
+pp+
+  geom_line(aes(x=age, y=fitted(fk_1)), col="blue")+
+  geom_line(aes(x=age, y=fitted(c1)), col="red")
+```
+
+
+
+
+7. **Advanced Modeling Techniques**:
+   - The script explores advanced modeling techniques, such as using fractional polynomials and B-splines to capture the relationship between age and CD4 counts more flexibly and accurately.
+
+
