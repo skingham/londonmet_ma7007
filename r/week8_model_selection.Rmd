@@ -1,0 +1,167 @@
+---
+title: "MA7007 Week8 Model Selection"
+output: html_notebook
+---
+
+```{r}
+#===========================
+# The US Air Pollution Data
+#===========================
+library(gamlss)
+data(usair)
+```
+
+
+```{r}
+mod1 <- gamlss(y ~ ., data = usair, family = GA)
+```
+
+The drop1() and add1() functions are used to assess the significance of terms in the model by dropping or adding them.
+
+```{r}
+# drop1()
+
+# drop1(mod1)
+
+drop1(mod1, parallel="snow", ncpuss=4)
+
+# add1()
+
+# add1(mod1, scope = ~(x1 + x2 + x3 + x4 + x5 + x6)^2)
+
+add1(mod1, scope = ~(x1 + x2 + x3 + x4 + x5 + x6)^2, parallel="snow", ncpuss=4)
+```
+
+The stepGAIC() function is used to perform stepwise model selection using the Generalized Akaike Information Criterion (GAIC). Different options are explored, such as parallelization, setting the k parameter, and specifying the scope of terms to be considered.
+
+```{r}
+# stepGAIC()
+
+mod2 <- stepGAIC(mod1, parallel="snow", ncpuss=4)
+
+mod21 <- stepGAIC(mod1, k=length(usair$y))
+
+mod3 <- stepGAIC(mod1, scope=list(lower=~1,
+                                  upper=~(x1+x2+x3+x4+x5+x6)^2))
+mod2$anova
+
+mod21$anova
+
+mod4 <- stepGAIC(mod1, parameter="sigma",
+                 scope=~x1+x2+x3+x4+x5+x6)
+```
+
+The GAIC() function is used to compare the fitted models based on their GAIC values.
+
+```{r}
+GAIC(mod1, mod2, mod21, mod3, mod4) # model selection
+```
+
+The plot() and wp() functions are used for diagnostic plots and worm plots, respectively, for the selected models.
+
+```{r}
+## plot() and wp(): # diagnostics
+
+plot(mod3)
+
+wp(mod3)
+```
+
+
+The stepGAICAll.A() and stepGAICAll.B() functions are used for automated model selection, considering linear terms and smoothers.
+
+```{r}
+# stepGAICAll.A()
+
+m1 <- gamlss(y~1, data=usair, famly=GA,
+             trace=FALSE) # null model
+
+m2 <- stepGAICAll.A(m1, scope=list(lower=~1,
+                                   upper=~x1+x2+x3+x4+x5+x6))# linear terms
+
+m3 <- stepGAICAll.A(m1, scope=list(lower=~1,
+                                   upper=~pb(x1)+pb(x2)+pb(x3)+pb(x4)+pb(x5)
+                                   +pb(x6)), k=log(41)) # smoothers
+
+# stepGAICAll.B()
+m4<- stepGAICAll.B(m1, scope=list(lower=~1,
+                                  upper=~x1+x2+x3+x4+x5+x6),
+                   k=log(41))
+```
+
+
+
+```{r}
+AIC(m1, m2, m3, m4)
+
+plot(m4)
+wp(m4)
+```
+
+
+## AIDS
+
+```{r}
+#======================================================
+# The AIDS data cases in the U.K. from January 1983
+# to March 1994
+# y : number of quarterly aids cases in England & Wales
+# x : time in quarters from January 1983
+# qrt : a factor for the quarterly seasonal effect
+#======================================================
+
+library(gamlss)
+
+data(aids)
+```
+
+The find.hyper() function is used to estimate the hyperparameters of the model using a grid search and the Global GAIC criterion.
+
+```{r}
+# Global GAIC: find.hyper()
+
+mod1 <- quote(gamlss(y ~ cs(x, df = p[1]) + qrt,
+                     family = NBI, data = aids, 
+                     trace = FALSE))
+
+op <- find.hyper(model = mod1, par = c(3),
+                 lower = c(1), steps = c(0.1), pen = 2.8)
+```
+
+Local likelihood estimation methods are explored, including local Maximum Likelihood (ML), local Generalized Cross-Validation (GCV), and local GAIC, using the pb() function for penalized B-splines.
+
+```{r}
+# Local ML
+
+data(aids)
+m1 <- gamlss(y~pb(x)+qrt, data=aids, family=NBI)
+
+edf(m1)
+
+# Local GCV
+
+m2 <- gamlss(y~pb(x, method="GCV")+qrt, data=aids, family=NBI)
+
+edf(m2)
+
+# Local GAIC
+
+m3 <- gamlss(y~pb(x, method="GAIC", k=2)+qrt, data=aids, family=NBI)
+```
+
+The edf() function is used to obtain the effective degrees of freedom for the fitted models, and the GAIC() function is used again for model comparison.
+
+```{r}
+edf(m3)
+
+GAIC(m1, m2, m3)
+```
+
+Diagnostic plots are generated for the selected model
+
+```{r}
+## plot () and wp()
+plot(m3)
+
+wp(m3)
+```
