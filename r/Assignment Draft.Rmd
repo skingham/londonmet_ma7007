@@ -13,17 +13,21 @@ library(gamlss.data)
 library(MASS)
 library(gamlss)
 library(ggplot2)
+library(gamlss.ggplots)
 
 # Load the dataset
 data(dbbmi)
 
 # Subset for ages 10 to 11
 old <- 10
-da <- with(dbbmi, subset(dbbmi, age > old & age < old + 1))
-bmi10 <- da$bmi
+dbbmi_subset <- with(dbbmi, subset(dbbmi, age > old & age < old + 1))
+bmi10 <- dbbmi_subset$bmi
 
 # Plot the histogram
 truehist(bmi10, nbins=30) # Adjust nbins as needed to make the histogram look good
+
+density(bmi10, cut = 0)
+gamlss.ggplots:::y_hist(bmi10)
 ```
 
 Experiment with the `nbins` parameter to find a visually appealing and informative histogram. The goal is to have enough bins to clearly see the distribution's shape without making it too noisy.
@@ -33,18 +37,58 @@ Experiment with the `nbins` parameter to find a visually appealing and informati
 Next, we'll fit several parametric distributions to the data. Common distributions for BMI data include the Normal, Log-Normal, and Gamma distributions, among others. The `gamlss` package provides functions to fit a wide range of distributions.
 
 ```{r}
+# m1 is the model with the lowest AIC: list the best 6 fits:
+m1 <- fitDist(bmi, data=dbbmi_subset, k=2)
+m1$fit[1:6]
+```
+
+```{r}
+# Best fit is BCCG
+m1 <- histDist(dbbmi_subset$bmi, "BCCG", density=TRUE, line.col=c(1,1), line.ty=c(1,2))
+plot(m1)
+
+m2 <- histDist(dbbmi_subset$bmi, "TF", density=TRUE, line.col=c(1,1), line.ty=c(1,2))
+plot(m2)
+
+m3 <- histDist(dbbmi_subset$bmi, "LOGNO", density=TRUE, line.col=c(1,1), line.ty=c(1,2))
+plot(m3)
+```
+
+```{r}
+plot(function(x) dJSU(x, mu=16.8475, sigma=1.7560, nu=2.439, tau=2.6890), 10, 25, main = "The JSU  density mu=16.8475, sigma=0.7560, nu=2.439, tau=0.6890")
+
+#print(dJSU(x, mu=16.8475, sigma=1.7560, nu=2.439, tau=2.742))
+```
+
+
+```{r}
 # Fit different distributions
-fit_norm <- gamlss(bmi10 ~ 1, family=NO)
+fit_bccg <- gamlss(bmi10 ~ 1, family=BCCG)
+fit_jsu <- gamlss(bmi10 ~ 1, family=JSU)
+fit_tf <- gamlss(bmi10 ~ 1, family=TF)
 fit_lognorm <- gamlss(bmi10 ~ 1, family=LOGNO)
+fit_lo <- gamlss(bmi10 ~ 1, family=LO)
+fit_pe <- gamlss(bmi10 ~ 1, family=PE)
 fit_gamma <- gamlss(bmi10 ~ 1, family=GA)
+fit_norm <- gamlss(bmi10 ~ 1, family=NO)
+fit_wei <- gamlss(bmi10 ~ 1, family=WEI)
+fit_gu <- gamlss(bmi10 ~ 1, family=GU)
+fit_exp <- gamlss(bmi10 ~ 1, family=EXP)
+fit_lg <- gamlss(bmi10 ~ 1, family=LG)
+
+```
+
+```{r}
+models <- list(fit_jsu, fit_tf, fit_lognorm, fit_lo, fit_pe, fit_gamma, fit_norm, fit_wei, fit_gu, fit_exp, fit_lg)
 
 # Compare models
-models <- list(fit_norm, fit_lognorm, fit_gamma)
 aic_values <- sapply(models, AIC)
 print(aic_values)
 
 # Select the model with the lowest AIC
 selected_model <- models[[which.min(aic_values)]]
+selected_model <- histDist(dbbmi_subset$bmi, "JSU", density=TRUE, line.col=c(1,1), line.ty=c(1,2))
+plot(selected_model)
 ```
 
 The choice of distribution can be justified by comparing the Akaike Information Criterion (AIC) values of the fitted models—the model with the lowest AIC is typically preferred as it suggests a good fit with relatively lower complexity.
@@ -53,9 +97,10 @@ The choice of distribution can be justified by comparing the Akaike Information 
 
 Finally, for the chosen model, we can output the parameter estimates and interpret them according to the distribution's characteristics.
 
-```r
+```{r}
 # Output parameter estimates for the chosen model
 summary(selected_model)
+print(fit_jsu$mu.coefficients)
 ```
 
 Interpretation of the parameters will depend on the selected distribution. For example:
@@ -64,6 +109,21 @@ Interpretation of the parameters will depend on the selected distribution. For e
 - For a Gamma distribution (`GA`), the parameters might include a shape and a scale parameter, reflecting the distribution's skewness and scale.
 
 Refer to the GAMLSS book or documentation for specific interpretations of the parameters of your chosen distribution. The interpretation will help in understanding the characteristics of BMI distribution among Dutch boys aged 10 to 11, such as its central tendency, variability, and potential skewness.
+
+```{r}
+# Function to calculate the fitted density
+density_fitted <- function(x) {
+  dJSU(x, mu=fit_jsu$mu.coefficients, sigma=fit_jsu$sigma.coefficients, nu=fit_jsu$nu.coefficients, tau=fit_jsu$tau.coefficients)
+}
+
+# Histogram with ggplot
+p <- ggplot(dbbmi_subset, aes(x=bmi10)) +
+  geom_histogram(aes(y=..density..), binwidth = 0.5, colour="black", fill="white") 
+
+# Add the fitted model curve
+p <- p + stat_function(fun=density_fitted, colour="red", linewidth=1)
+p
+```
 
 ## Model Selection Week 8
 
@@ -107,24 +167,14 @@ Broad outline of approach for Q3
 ### Sample Code:
 
 ```{r}
-# Load the necessary library
-library(gamlss)
-
-# Assuming my_data is already loaded into your R environment
-# If not, you would load it using something like:
-# my_data <- read.csv("path/to/your/my_data.csv")
-
-# Initial exploration to determine a potential distribution family
-# This step might involve plotting and basic summaries
-# For demonstration, we'll proceed directly to fitting models
 
 # Fit models with different distributions to find the best fit
 # Replace GA, NO, and BI with the distributions you're interested in
 # Example: GA (Gamma), NO (Normal), BI (Binomial)
 models <- list(
-  GA = gamlss(response ~ p_1 + p_2 + p_3, family = GA, data = my_data),
-  NO = gamlss(response ~ p_1 + p_2 + p_3, family = NO, data = my_data),
-  BI = gamlss(response ~ p_1 + p_2 + p_3, family = BI, data = my_data)
+  GA = gamlss(bmi10 ~ 1, family = GA, data = dbbmi_subset),
+  NO = gamlss(bmi10 ~ 1, family = NO, data = dbbmi_subset),
+  BCCG = gamlss(bmi10 ~ 1, family = BCCG, data = dbbmi_subset)
 )
 
 # Compare models using AIC
@@ -134,7 +184,7 @@ sapply(models, AIC)
 # For demonstration, let's assume the Gamma distribution is chosen
 
 # Model fitting with the selected distribution
-final_model <- gamlss(response ~ p_1 + p_2 + p_3, family = GA, data = my_data)
+final_model <- gamlss(bmi10 ~ 1, family = BCCG, data = dbbmi_subset)
 
 # Variable selection using stepGAIC
 final_model_step <- stepGAIC(final_model, method="backward")
@@ -148,7 +198,285 @@ qqnorm(residuals(final_model_step))
 qqline(residuals(final_model_step))
 
 # Checking for influential observations
-plot(influence.measures(final_model_step)$infmat)
+#plot(influence.measures(stepGAIC(final_model, method="simple"))$infmat)
 
 # Adjust the model as needed based on diagnostics
 ```
+
+
+## Question 2
+
+```{r}
+# Install if not already installed
+if (!requireNamespace("gamlss", quietly = TRUE)) install.packages("gamlss")
+if (!requireNamespace("gamlss.data", quietly = TRUE)) install.packages("gamlss.data")
+
+# Load the packages
+library(gamlss)
+library(gamlss.data)
+```
+
+(a) Read the data file by typing data(grip)into R. Note that the gamlss packages have to be downloaded first i.e. library(gamlss).
+(b) In order to select your individual sample a unique seed number will be given to you. (In the example below we use the seed number 243 for demonstration.)
+
+```{r}
+# Load the data
+data("grip", package = "gamlss.data")
+
+set.seed(243) 
+index <- sample(3766, 1000) 
+mydata <- grip[index, ] 
+dim(mydata)
+
+# Sample 1000 observations
+index <- sample(nrow(grip), 1000)
+grip_sample <- grip[index, ]
+dim(grip_sample)
+```
+
+(c) Plot grip against age.  Note that there is no need to power transform the age in this data set. Explain why.
+
+Why No Power Transformation is Necessary:
+
+*    Linearity: If the relationship between age and grip strength is linear or close to linear, applying a transformation to age would not yield any significant benefits in terms of linear regression modeling or interpretation.
+    
+*    Variability: Power transformations are also used to stabilize variance across the range of predictor variables. If the variance of grip strength is relatively constant across ages, then transforming age wouldn't help in stabilizing variance.
+    
+*    Normality of Residuals: Another reason for transformations could be to achieve normality of residuals in regression modeling. If the residuals from a model with age predicting grip strength are already approximately normally distributed, a transformation is unnecessary.
+    
+*    Simplicity: Avoiding unnecessary transformations keeps the model simpler and makes interpretation more straightforward. If a simple model without transformation provides satisfactory results, it's often preferred for ease of explanation and understanding.
+
+    
+```{r}
+# Plot grip against age
+plot(grip$age, grip$grip,
+     xlab = "Age",
+     ylab = "Grip Strength",
+     main = "Grip Strength vs Age",
+     col = "blue",
+     pch = 19)
+
+# Optional: Add a smooth line to highlight the trend
+lines(smooth.spline(grip$age, grip$grip), col = "red")
+
+# Plot grip against age
+plot(grip_sample$age, grip_sample$grip,
+     xlab = "Age",
+     ylab = "Grip Strength",
+     main = "Grip Strength vs Age",
+     col = "blue",
+     pch = 19)
+
+# Optional: Add a smooth line to highlight the trend
+lines(smooth.spline(grip_sample$age, grip_sample$grip), col = "red")
+```
+(d) Use the LMS method to fit the data (You can simplify some of the steps below by using the gamlss package function lms() but you still have to justify the choice of the final model.)  That is, fit the BCCG distribution for grip.
+
+gbccg <- gamlss(grip ∼pb(age), sigma.fo=∼pb(age), nu.fo=∼pb(age), data=da, family=BCCG)
+
+where the smoothing for age uses the P-splines function pb(), i.e. pb(age), for the predictors for parameter μ, σ and ν.
+
+How many degrees of freedom were used for smoothing in the model? Use the function edf()or edfAll().
+
+When selecting the final model, especially after using smoothing techniques like P-splines (pb()), it's crucial to balance fit and complexity. Here are factors to consider in justifying your model choice:
+
+    Goodness of Fit: Use diagnostic plots and goodness-of-fit statistics to ensure the model adequately captures the relationship between grip strength and age.
+    Complexity vs. Simplicity: A model with more degrees of freedom can capture more complex relationships but risks overfitting. Ensure the EDF values suggest a model complex enough to capture essential patterns without overfitting.
+    Comparison with Alternative Models: If applicable, compare your chosen model with alternatives using information criteria like AIC or BIC, which penalize model complexity.
+    Interpretability: Ensure the model remains interpretable. While more complex models might provide a marginally better fit, they should not do so at the expense of being understandable.
+
+The BCCG distribution is chosen for its flexibility in modeling skewed data, which is often encountered in physical measurements like grip strength. By adjusting for age with P-splines, the model can flexibly accommodate nonlinear age effects on the distribution parameters of grip strength, making it a powerful approach for analyzing such data.
+
+```{r}
+
+# Fit the model
+gbccg <- gamlss(grip ~ pb(age),
+                sigma.fo = ~ pb(age),
+                nu.fo = ~ pb(age),
+                data = grip_sample,
+                family = BCCG)
+
+# Extract Effective Degrees of Freedom
+edf_details <- edfAll(gbccg)
+
+# Print the EDF for each parameter
+print(edf_details)
+
+```
+
+
+(e) Use the fitted values from the LMS model in (d) as starting values for fitting the BCT and the BCPE distributions to the data, e.g.
+`gbct <- gamlss(grip∼pb(age), sigma.fo = ∼pb(age), nu.fo = ∼pb(age), tau.fo = ∼pb(age), data=da, family=BCT, start.from=gbccg)`
+
+What are the effective degrees of freedom fitted for the parameters? Try to interpret the effective degrees of freedom.
+
+Interpreting the Effective Degrees of Freedom:
+
+*    EDF Near 1: If the effective degrees of freedom for a parameter is close to 1, it suggests that the model is applying very little smoothing to that parameter. This can imply a linear relationship between the parameter and the predictors.
+
+*    EDF Greater Than 1: An EDF significantly greater than 1 indicates more complex relationships are being modeled, with the splines applying more smoothing. This is often necessary when the relationship between the response and predictors is nonlinear or when there's a varying effect of predictors across the range of the data.
+
+*    High EDF: Very high EDF values may signal overfitting, where the model is too closely fitting the idiosyncrasies of the sample data rather than capturing the underlying population trends.
+
+The mu, sigma, nu, and tau parameters represent different aspects of the distribution being modeled:
+
+*    mu (μμ): The location parameter (central tendency).
+*    sigma (σσ): The scale parameter (dispersion or variability).
+*    nu (νν) and tau (ττ): Parameters that control the shape of the distribution, including skewness and kurtosis.
+
+Choosing between the BCT and BCPE models, and interpreting their parameters' EDFs, depends on the fit quality, predictive performance, and the complexity trade-off. This process is crucial for understanding how age influences grip strength across its distribution and ensuring the model's generalizability.
+
+```{r}
+# Fit the BCT model using gbccg as starting values
+gbct <- gamlss(grip ~ pb(age),
+               sigma.fo = ~ pb(age),
+               nu.fo = ~ pb(age),
+               tau.fo = ~ pb(age),
+               data = grip_sample,
+               family = BCT,
+               start.from = gbccg)
+
+# Fit the BCPE model using gbccg as starting values
+gbcpe <- gamlss(grip ~ pb(age),
+                sigma.fo = ~ pb(age),
+                nu.fo = ~ pb(age),
+                tau.fo = ~ pb(age),
+                data = grip_sample,
+                family = BCPE,
+                start.from = gbccg)
+
+# The EDF indicates the complexity of the model related to each parameter.
+
+# Extract EDF for BCT model
+edf_bct <- edfAll(gbct)
+
+# Extract EDF for BCPE model
+edf_bcpe <- edfAll(gbcpe)
+
+# Print the EDF for each model
+print(edf_bct)
+print(edf_bcpe)
+```
+
+(f) Use the generalised Akaike information criterion, GAIC, to compare the three models.
+
+The GAIC is a variant of the Akaike Information Criterion (AIC) that allows for a more flexible penalization of model complexity and is particularly useful in comparing models fitted with the same dataset but different distributions or complexities.
+
+Interpreting GAIC
+
+When comparing models with GAIC, the model with the lowest GAIC value is generally considered the best among the set, as it strikes the most favorable balance between model fit and complexity. The GAIC penalizes models more heavily for additional parameters than the traditional AIC does, making it particularly useful for models that might overfit the data with too many parameters or excessive flexibility.
+
+*    Lower GAIC: Indicates a model that has a better trade-off between goodness-of-fit and complexity, suggesting it might generalize better to new data.
+
+*    Comparing Values: The absolute value of the GAIC is not interpretable on its own; it's the relative differences between the GAIC scores of the models that inform model selection. A difference of more than a few points is generally considered meaningful.
+
+By evaluating the GAIC values for your three models, you can make an informed decision about which model provides the best fit to your data without unnecessarily increasing model complexity. This is particularly useful in your case, where you're fitting different distributions and considering different forms of the response variable's relationship with predictors.
+
+
+```{r}
+# Calculate GAIC for each model
+gaic_bccg <- GAIC(gbccg)
+gaic_gbct <- GAIC(gbct)
+gaic_gbcpe <- GAIC(gbcpe)
+
+# Print the GAIC values
+print(paste("GAIC for BCCG:", gaic_bccg))
+print(paste("GAIC for BCT:", gaic_gbct))
+print(paste("GAIC for BCPE:", gaic_gbcpe))
+```
+
+
+(g) Plot the fitted parameters for the fitted models in (d) and (e) using for example
+fitted.plot(gbccg, gbct, x=da$age)
+where gbccg and gbct are the BCCG and BCT models respectively.
+
+```{r}
+# Assuming 'grip_sample' is your dataset and 'gbccg' and 'gbct' are fitted models
+gbccg.plot(gbccg, gbct, x=grip_sample$age)
+
+fitted.plot(gbccg, gbct, x=grip_sample$age)
+
+# Calculate fitted values or centiles for each model across a range of ages
+age_seq <- seq(min(grip_sample$age), max(grip_sample$age), length.out = 100)
+
+# For BCCG Model
+fitted_bccg <- predict(gbccg, newdata=data.frame(age=age_seq), type="response")
+
+# For BCT Model
+fitted_gbct <- predict(gbct, newdata=data.frame(age=age_seq), type="response")
+
+# Plotting
+plot(age_seq, fitted_bccg, type='l', col='blue', ylim=range(c(fitted_bccg, fitted_gbct)),
+     xlab='Age', ylab='Fitted Grip Strength', main='Fitted Models Comparison')
+lines(age_seq, fitted_gbct, col='red')
+
+# Adding a legend
+legend("topright", legend=c("BCCG", "BCT"), col=c("blue", "red"), lty=1, cex=0.8)
+```
+
+(h) Obtain a centile plot for the fitted models in (d) and (e) using centiles() orcentiles.split() and compare them.
+
+Interpreting the Comparison:
+
+    Overlap and Divergence: Overlapping lines suggest agreement between models in estimating grip strength across age centiles. Divergence indicates differences in how models estimate grip strength at various ages, potentially due to differences in distributional assumptions or how well each model captures the variability in the data.
+    Model Fit and Data Representation: This visual comparison can help assess which model might provide a better fit or more accurately represent the underlying trends and variations in your data. For example, if one model's centiles follow the data more closely or seem to capture the trend without overfitting, it might be preferable.
+
+By comparing these centile plots, you get a visual representation of how each model performs across the range of ages, which can inform your decision on the best model for your analysis based on how well they fit the centiles to the observed data.
+
+```{r}
+#centilesTwo(gbccg, grid.x1 = age, grid.x2 = grip, )
+centiles(gbccg, xvar=grip_sample$age, cent=c(0.1, 0.4, 2,10,25,50,75,90,98,99.6, 99.9), ylab="grip", xlab="age", legend=FALSE)
+```
+
+```{r}
+# Plot centiles for BCCG model
+plot(grip_sample$age, grip_sample$grip, col="gray90", main="Centile Comparison", xlab="Age", ylab="Grip Strength")
+
+centiles(gbccg, xvar = grip_sample$age, col = "blue", lty = 1, add = TRUE)
+legend("topright", legend=c("BCCG"), col=c("blue"), lty=1, cex=0.8)
+
+# Add centiles for BCT model to the existing plot
+centiles(gbct, xvar = grip_sample$age, col = "red", lty = 2, add = TRUE)
+# Update the legend to include BCT
+legend("topright", legend=c("BCCG", "BCT"), col=c("blue", "red"), lty=1:2, cex=0.8)
+
+```
+
+(i) Investigate the residuals from the fitted models in (d) and (e) using e.g. plot(), wp() (worm plot) and Q.stats()(Q-statistics).
+
+Interpreting Diagnostic Plots and Statistics:
+
+*    Residual Plots: You're looking for patterns or systematic deviations from zero. Ideally, residuals should be randomly distributed around zero without clear patterns.
+
+*    Worm Plots (WP): These plots should ideally resemble a straight line. Curvature or deviations from the line indicate potential issues with the model's fit to the data, such as non-normality or heteroscedasticity.
+
+*    Q-Statistics (Q.stats()): This provides a summary of the quantiles of the residuals compared to the expected distribution. Significant deviations can indicate that the model's assumptions about the distribution of residuals may not hold.
+
+
+When using these diagnostic tools, it's important to consider them collectively rather than relying on a single method. Each tool can highlight different aspects of the model fit and potential areas for improvement.
+
+```{r}
+# For BCCG Model
+plot(residuals(gbccg), main="Residuals for BCCG Model")
+
+# For BCT Model
+plot(residuals(gbct), main="Residuals for BCT Model")
+
+# Assuming the 'gamlss' package is loaded
+
+# For BCCG Model
+wp(gbccg, main="Worm Plot for BCCG Model")
+
+# For BCT Model
+wp(gbct, main="Worm Plot for BCT Model")
+
+# For BCCG Model
+qstats_bccg <- Q.stats(gbccg)
+print(qstats_bccg)
+
+# For BCT Model
+qstats_bct <- Q.stats(gbct)
+print(qstats_bct)
+```
+
+(j)  Choose between the models and give a reason for your choice.
