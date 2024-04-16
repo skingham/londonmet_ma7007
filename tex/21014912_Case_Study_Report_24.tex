@@ -1,0 +1,160 @@
+\documentclass{article}
+
+\usepackage[english]{babel}
+\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage[backend=biber, sorting=nyt, style=authoryear-ibid]{biblatex}
+\usepackage[inkscapeformat=png]{svg}
+\usepackage[outputdir=pdf]{minted}
+\usepackage{graphicx}
+\graphicspath{ {figures/} }
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{parskip}
+%\usepackage{lipsum}
+\usepackage{setspace}
+\doublespacing
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{fontspec}
+\usepackage{fontawesome5}
+\usepackage{amsmath}
+\usepackage{csquotes}
+
+% Document style
+%\usepackage[utf8]{inputenc} % Required for inputting international characters
+%\usepackage[T1]{fontenc} % Output font encoding for international characters
+%\usepackage{palatino} % Use the Palatino font
+%\usepackage{microtype} % Improves spacing
+%\usepackage[bf,sf,center]{titlesec} % Required for modifying section titles - bold, sans-serif, centered
+%\usepackage{fancyhdr} % Required for modifying headers and footers
+%\fancyhead[L]{\textsf{\rightmark}} % Top left header
+%\fancyhead[R]{\textsf{\leftmark}} % Top right header
+%\renewcommand{\headrulewidth}{1.4pt} % Rule under the header
+%\fancyfoot[C]{\textbf{\textsf{\thepage}}} % Bottom center footer
+%\renewcommand{\footrulewidth}{1.4pt} % Rule under the footer
+%\pagestyle{fancy} % Use the custom headers and footers throughout the document
+
+% Appendix dictionary template: print each word on the page
+% \markboth{}{} prints the first word on the page in the top left header and the last word in the top right
+%\newcommand{\entry}[4]{\markboth{#1}{#1}\textbf{#1}\ {(#2)}\ \textit{#3}\ $\bullet$\ {#4}}
+\newcommand{\entry}[2]{\markboth{#1}{#1}\textbf{#1}\ $\bullet$\ {#2}}
+
+
+%----------------------------------------------------------------------------------------
+%  The completed Case Study Report (no more than 5000 words) 
+%    must be submitted on Weblearn by Friday 10th of May 2024 at 15:00.
+%
+%  A single pdf of your report saved with the appropriate filename (see below). The filenames should be of the form: A B C.pdf
+%
+%  A = Your ID, B = Case Study Report , C = YY (last 2 digits of the year) For example : 12345678 Case Study Report 24.pdf
+%
+%  DONOTPUTDATAinthereport(onlythefirst20casesintheAppendix).
+%
+%  Anyfigureyouuseshouldhaveacaptionbelowlike:
+%     Figure 1: Showing the linear regression of y against time. (You should refer to Figure 1 in the text).
+%
+%  Youshouldonlyputtheimportantresultsorfiguresinthereportandcommentonthem.
+%
+%  PutPAGENumbersintoyourreport.
+%
+%  The report does not have to be long. Extensive output without comments will get little credit. Your comments and explanation are most important.
+%  
+%----------------------------------------------------------------------------------------
+
+%\bibliography{references}
+\addbibresource{references.bib}
+
+\title{MA7007 - Statistical Modelling and Forecasting Case Study Report 2023-2024}
+\author{Stuart Kingham: ID 21014912}
+
+\begin{document}
+\doublespacing
+
+%\begin{center}
+%{\LARGE Case Study Report 2023-2024}
+%\end{center} 
+%\vspace*{\fill}
+
+
+%\maketitle
+\begin{titlepage}
+  \topskip0pt
+  \vspace*{\fill}
+  \begin{center}
+       \vspace*{1cm}
+
+       {\LARGE Case Study Report 2023-2024}
+
+       \vspace*{1cm}
+       {\large \textbf{Statistical Analysis of Data Sets}}
+       
+       %\vspace{1.5cm}
+
+       \vfill
+
+       \textbf{Stuart Kingham: ID 2101491}
+
+       \vfill
+                        
+       \vspace{0.8cm}
+     
+       %\includegraphics[width=0.4\textwidth]{university}
+
+       MM7007: Statistical Modelling and Forecasting\\
+       School of Computing and Digital Media\\
+       London Metropolitan University\\
+       May 10, 2024
+            
+  \end{center}
+  \vspace*{\fill}
+\end{titlepage}
+
+\pagebreak
+
+\begin{abstract}
+  Abstract
+\end{abstract}
+
+\newpage
+
+\singlespacing 
+\tableofcontents
+\listoffigures
+\listoftables
+\doublespacing
+
+\pagenumbering{roman}
+\pagenumbering{arabic}
+\newpage
+
+\input{assignment_introduction}
+
+\input{assignment_first_data_set}
+
+\input{assignment_second_data_set}
+
+\input{assignment_third_data_set}
+
+\input{assignment_peer_review}
+
+\pagebreak
+
+\input{assignment_conclusion}
+
+\pagebreak
+
+\printbibliography
+
+\pagebreak
+
+\appendix
+
+\input{assignment_appendix_code}                   
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
