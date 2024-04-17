@@ -1,10 +1,48 @@
 \section{First data set}
 
-Fitting distributions to the data.
+Fitting distributions to the data.  The data set represents BMI data collected on \ldots
 
-(a) Comment on the different distributions you are using.
-(b) Which distribution did you choose?
+BMI is a number calculated from a person's height in meters and weight in kilograms:
+\begin{equation}
+  BMI = \frac{kg}{m^2}
+\end{equation}
+
+\subsection{Comment on the different distributions you are using.}
+
+We are asked to interpret the bmi information of subjects within a one year
+age group.  From the summary information we are looking at, the response
+variable of `bmi` is a continuous random variable.
+
+As there is no definition of the upper bounds of a person's height or weight,
+there's no natural justification to normalise the value of `bmi`, so we are
+interested in families of continuous distributions over the range $R_Y = (0, \inf)$.
+
+\begin{figure}[!ht]
+\begin{verbatim}
+      age              bmi       
+ Min.   : 0.030   Min.   :11.17  
+ 1st Qu.: 1.863   1st Qu.:15.96  
+ Median :10.450   Median :17.45  
+ Mean   : 9.291   Mean   :18.03  
+ 3rd Qu.:15.130   3rd Qu.:19.60  
+ Max.   :21.700   Max.   :35.42  
+\end{verbatim}
+\caption {Summary information on the `dbbmi` data}
+\end{figure}
+
+
+\subsection{Which distribution did you choose?}
+
+The \textbf{`Box-Cox Cole Green`} (BCCG) distribution was selected for this analysis.
+
 (c) Give reasons why you chose the distribution in part (b).
+
+The GAMLSS function `fitDist` fits all relevant parametric `gamlss.family` distributions
+to a single data vector, choosing the final marginal distributions with the lowest
+Akaike Information Criteria (AIC) value with a penality of $k=2$.
+
 (d) Plot the fitted distribution and comment.
+
 (e) State the fitted parameter values of the final chosen model
+
 
