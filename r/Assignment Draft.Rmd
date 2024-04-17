@@ -392,9 +392,9 @@ where gbccg and gbct are the BCCG and BCT models respectively.
 
 ```{r}
 # Assuming 'grip_sample' is your dataset and 'gbccg' and 'gbct' are fitted models
-gbccg.plot(gbccg, gbct, x=grip_sample$age)
+fittedPlot(gbccg, gbct, x=grip_sample$age)
 
-fitted.plot(gbccg, gbct, x=grip_sample$age)
+fittedPlot(gbccg, gbct, x=grip_sample$age)
 
 # Calculate fitted values or centiles for each model across a range of ages
 age_seq <- seq(min(grip_sample$age), max(grip_sample$age), length.out = 100)
