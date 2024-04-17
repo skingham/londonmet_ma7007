@@ -13,23 +13,13 @@ library(gamlss.data)
 library(MASS)
 library(gamlss)
 library(ggplot2)
-<<<<<<< HEAD
-=======
 library(gamlss.ggplots)
->>>>>>> 34eab3f739321a7d56f6e39f0c3b786feb2d385d
 
 # Load the dataset
 data(dbbmi)
 
 # Subset for ages 10 to 11
 old <- 10
-<<<<<<< HEAD
-da <- with(dbbmi, subset(dbbmi, age > old & age < old + 1))
-bmi10 <- da$bmi
-
-# Plot the histogram
-truehist(bmi10, nbins=30) # Adjust nbins as needed to make the histogram look good
-=======
 dbbmi_subset <- with(dbbmi, subset(dbbmi, age > old & age < old + 1))
 bmi10 <- dbbmi_subset$bmi
 
@@ -38,7 +28,6 @@ truehist(bmi10, nbins=30) # Adjust nbins as needed to make the histogram look go
 
 density(bmi10, cut = 0)
 gamlss.ggplots:::y_hist(bmi10)
->>>>>>> 34eab3f739321a7d56f6e39f0c3b786feb2d385d
 ```
 
 Experiment with the `nbins` parameter to find a visually appealing and informative histogram. The goal is to have enough bins to clearly see the distribution's shape without making it too noisy.
@@ -48,15 +37,6 @@ Experiment with the `nbins` parameter to find a visually appealing and informati
 Next, we'll fit several parametric distributions to the data. Common distributions for BMI data include the Normal, Log-Normal, and Gamma distributions, among others. The `gamlss` package provides functions to fit a wide range of distributions.
 
 ```{r}
-<<<<<<< HEAD
-# Fit different distributions
-fit_norm <- gamlss(bmi10 ~ 1, family=NO)
-fit_lognorm <- gamlss(bmi10 ~ 1, family=LOGNO)
-fit_gamma <- gamlss(bmi10 ~ 1, family=GA)
-
-# Compare models
-models <- list(fit_norm, fit_lognorm, fit_gamma)
-=======
 # m1 is the model with the lowest AIC: list the best 6 fits:
 m1 <- fitDist(bmi, data=dbbmi_subset, k=2)
 m1$fit[1:6]
@@ -102,17 +82,13 @@ fit_lg <- gamlss(bmi10 ~ 1, family=LG)
 models <- list(fit_jsu, fit_tf, fit_lognorm, fit_lo, fit_pe, fit_gamma, fit_norm, fit_wei, fit_gu, fit_exp, fit_lg)
 
 # Compare models
->>>>>>> 34eab3f739321a7d56f6e39f0c3b786feb2d385d
 aic_values <- sapply(models, AIC)
 print(aic_values)
 
 # Select the model with the lowest AIC
 selected_model <- models[[which.min(aic_values)]]
-<<<<<<< HEAD
-=======
 selected_model <- histDist(dbbmi_subset$bmi, "JSU", density=TRUE, line.col=c(1,1), line.ty=c(1,2))
 plot(selected_model)
->>>>>>> 34eab3f739321a7d56f6e39f0c3b786feb2d385d
 ```
 
 The choice of distribution can be justified by comparing the Akaike Information Criterion (AIC) values of the fitted models—the model with the lowest AIC is typically preferred as it suggests a good fit with relatively lower complexity.
@@ -121,16 +97,10 @@ The choice of distribution can be justified by comparing the Akaike Information 
 
 Finally, for the chosen model, we can output the parameter estimates and interpret them according to the distribution's characteristics.
 
-<<<<<<< HEAD
-```r
-# Output parameter estimates for the chosen model
-summary(selected_model)
-=======
 ```{r}
 # Output parameter estimates for the chosen model
 summary(selected_model)
 print(fit_jsu$mu.coefficients)
->>>>>>> 34eab3f739321a7d56f6e39f0c3b786feb2d385d
 ```
 
 Interpretation of the parameters will depend on the selected distribution. For example:
@@ -140,8 +110,6 @@ Interpretation of the parameters will depend on the selected distribution. For e
 
 Refer to the GAMLSS book or documentation for specific interpretations of the parameters of your chosen distribution. The interpretation will help in understanding the characteristics of BMI distribution among Dutch boys aged 10 to 11, such as its central tendency, variability, and potential skewness.
 
-<<<<<<< HEAD
-=======
 ```{r}
 # Function to calculate the fitted density
 density_fitted <- function(x) {
@@ -157,7 +125,6 @@ p <- p + stat_function(fun=density_fitted, colour="red", linewidth=1)
 p
 ```
 
->>>>>>> 34eab3f739321a7d56f6e39f0c3b786feb2d385d
 ## Model Selection Week 8
 
 Broad outline of approach for Q3
@@ -200,33 +167,14 @@ Broad outline of approach for Q3
 ### Sample Code:
 
 ```{r}
-<<<<<<< HEAD
-# Load the necessary library
-library(gamlss)
-
-# Assuming my_data is already loaded into your R environment
-# If not, you would load it using something like:
-# my_data <- read.csv("path/to/your/my_data.csv")
-
-# Initial exploration to determine a potential distribution family
-# This step might involve plotting and basic summaries
-# For demonstration, we'll proceed directly to fitting models
-=======
->>>>>>> 34eab3f739321a7d56f6e39f0c3b786feb2d385d
 
 # Fit models with different distributions to find the best fit
 # Replace GA, NO, and BI with the distributions you're interested in
 # Example: GA (Gamma), NO (Normal), BI (Binomial)
 models <- list(
-<<<<<<< HEAD
-  GA = gamlss(response ~ p_1 + p_2 + p_3, family = GA, data = my_data),
-  NO = gamlss(response ~ p_1 + p_2 + p_3, family = NO, data = my_data),
-  BI = gamlss(response ~ p_1 + p_2 + p_3, family = BI, data = my_data)
-=======
   GA = gamlss(bmi10 ~ 1, family = GA, data = dbbmi_subset),
   NO = gamlss(bmi10 ~ 1, family = NO, data = dbbmi_subset),
   BCCG = gamlss(bmi10 ~ 1, family = BCCG, data = dbbmi_subset)
->>>>>>> 34eab3f739321a7d56f6e39f0c3b786feb2d385d
 )
 
 # Compare models using AIC
@@ -236,11 +184,7 @@ sapply(models, AIC)
 # For demonstration, let's assume the Gamma distribution is chosen
 
 # Model fitting with the selected distribution
-<<<<<<< HEAD
-final_model <- gamlss(response ~ p_1 + p_2 + p_3, family = GA, data = my_data)
-=======
 final_model <- gamlss(bmi10 ~ 1, family = BCCG, data = dbbmi_subset)
->>>>>>> 34eab3f739321a7d56f6e39f0c3b786feb2d385d
 
 # Variable selection using stepGAIC
 final_model_step <- stepGAIC(final_model, method="backward")
@@ -254,12 +198,6 @@ qqnorm(residuals(final_model_step))
 qqline(residuals(final_model_step))
 
 # Checking for influential observations
-<<<<<<< HEAD
-plot(influence.measures(final_model_step)$infmat)
-
-# Adjust the model as needed based on diagnostics
-```
-=======
 #plot(influence.measures(stepGAIC(final_model, method="simple"))$infmat)
 
 # Adjust the model as needed based on diagnostics
@@ -542,4 +480,3 @@ print(qstats_bct)
 ```
 
 (j)  Choose between the models and give a reason for your choice.
->>>>>>> 34eab3f739321a7d56f6e39f0c3b786feb2d385d
