@@ -1,0 +1,866 @@
+---
+title: "Week 6: Additive smoothing terms"
+output: html_notebook
+---
+
+## Week6 Tutorial
+
+### Pb() And Pbz
+
+```{r}
+data(abdom)
+abdom$x1 <- rNO ( 610, mu=5, sigma=5)
+
+#fitting the original x
+mo <- gamlss(y~pb(x), data=abdom, trace= FALSE)
+
+# fitting extra x1 with pb()
+m1 <- gamlss(y~pb(x) + pb(x1), data=abdom, trace= FALSE)
+
+# fitting extra x1 with pbz
+m2 <- gamlss(y~pbz(x) + pbz(x1), data=abdom, trace= FALSE)
+
+AIC (m0, m1, m2)
+```
+
+
+### Monotonic pbm()
+
+```{r}
+set.seed(1334)
+x = seq(0,1, length=1000)
+p <- 0.4
+y <- sin(2*pi * p*x) + rnorm(1000) * 0.1
+plot (y~x, cex=.2, col = "grey")
+
+m3 <- gamlss(y~pbm(x), trace= FALSE)
+lines(fitted(m3)~x, col= "red")
+
+yy <- -y
+plot(yy~pbm(x), cex=.2, col = "grey")
+
+m4 <- gamlss(yy~pbm(x, mono= "down"), trace= FALSE)
+lines(fitted(m4)~x, col= "red")
+```
+pbc() two ends of the fitted smooth functions have identical value.
+
+### CS ()
+
+```{r}
+rcs1 <- gamlss(R~cs(Fl) +cs(A), data=rent, family = GA, trace = FALSE)
+term.plot(rcs1)
+```
+
+### ri()
+
+```{r}
+X <- with(usair, cbind(x1, x2, x3, x4, x5, x6))
+sX <- scale(X)
+m5 <- gamlss(y~sX, data= usair, trace= FALSE)
+m6 <- gamlss(y~ri(sX), data= usair) #ridge
+m7 <- gamlss(y~ri(sX, Lp=1), data= usair) #lasso
+```
+### PVC 
+
+```{r}
+# varying coefficient model 
+mpvc <- gamlss(R~pb(Fl)+pb(A)+ pvc(Fl, by=A), data=rent, family=GA, trace=FALSE)
+```
+
+### NN
+
+```{r}
+# the thicker the line the bigger value. Negative coefficient grey, positive coefficient black.
+mNN <- gamlss(R~nn(~Fl + A, size=5, decay=0.01), data=rent, family=GA, trace=FALSE) 
+```
+
+### TR 
+
+```{r}
+mTR <- gamlss(R~ tr(~Fl +A + H + B + loc), data=rent, family= GA, gd.tol=100)
+```
+
+
+## Demo for PB()
+
+```{r}
+rm(list=ls())
+##################################################################
+##################################################################
+# Function creating the B basis
+Bbase <- function(x,  ndx=20, deg=3){
+tpower <- function(x, t, p) {(x - t) ^ p * (x > t)}
+    xl <- min(x, na.rm = TRUE)
+    xr <- max(x, na.rm = TRUE)
+  xmin <- xl - 0.01 * (xr - xl) 
+  xmax <- xr + 0.01 * (xr - xl)
+    dx <- (xmax - xmin) / ndx # DS increment 
+ knots <- seq(xmin - deg * dx, xmax + deg * dx, by = dx)
+     P <- outer(x, knots, tpower, deg)# calculate the power in the knots
+     n <- dim(P)[2]
+     D <- diff(diag(n), diff = deg + 1) / (gamma(deg + 1) * dx ^ deg) # 
+     B <- (-1) ^ (deg + 1) * P %*% t(D) 
+  attr(B, "knots") <- knots[-c(1:(deg-1), (n-(deg-2)):n)]
+  B 
+}
+#################################################################
+#################################################################
+#################################################################
+# Showing how to generate the penalty matrices
+#################################################################
+# order=1
+D1 <- diff(diag(10), diff=1)
+D1
+# order=2
+D2 <- diff(diag(10), diff=2)
+D2
+G1 <- t(D1)%*%D1
+G1
+G2 <- t(D2)%*%D2
+G2
+#################################################################
+#################################################################
+#################################################################
+# generating the data
+################################################################
+################################################################
+n <- 500
+x <- seq(0, 1, length = n)*1.4
+set.seed(123)
+y <- 1.2 + .3*sin(5  * x) + rnorm(n) * 0.2
+plot(y~x)
+###############################################################
+###############################################################
+# fitting the model
+# fit the penalise least squares
+library(gamlss)
+m1 <- gamlss(y~pb(x))
+# the knots 
+pbKnots <- getSmo(m1)$knots
+length(pbKnots)
+# get the x's and cut than in equal space
+plot(y~x, pch=20)
+abline(v=getSmo(m1)$knots, col="gray")
+length(getSmo(m1)$knots)
+###############################################################
+###############################################################
+# create the basis for x
+B <- Bbase(x)
+dim(B)
+#cbind(attr(B, "knots"),getSmo(m1)$knots)
+# B basis
+matplot(x,B, type="l", col="black")
+abline(v=getSmo(m1)$knots, col="gray")
+# The fitted values is the B multiplied by gamma's
+# The fitted coefficients   
+plot(getSmo(m1)$coef)
+###############################################################
+###############################################################
+plot(y~x, ylim=c(0,max(y)), pch=20) 
+abline(v=getSmo(m1)$knots, col=gray(.9))
+matplot(x,B, type="l", col="gray",lty=1,  add=T)
+lines(fitted(m1)~x, lwd=2, col="blue")
+##############################################################
+##############################################################
+#
+# smoothing matrix
+plot(y~x)
+B <- Bbase(x)
+dim(B)
+attributes(B)
+D2 <- diff(diag(23), diff=2)
+dim(D2)
+G <- t(D2)%*%D2
+dim(G)
+lambda <-100
+beta <- solve(t(B)%*%B+lambda*G)%*%t(B)%*%y
+S <- B%*%solve(t(B)%*%B+lambda*G)%*%t(B) 
+sum(diag(S))# gegrees of freedom 
+
+plot(beta)
+
+###############################################################
+###############################################################
+# P-SPLINES pb() selection of smoothing parameters
+###############################################################
+###############################################################
+library(gamlss)
+
+
+p1 <- gamlss(bmi~pb(age, method="ML"), data=dbbmi)
+p2 <- gamlss(bmi~pb(age, method="GCV") , data=dbbmi)
+p3 <- gamlss(bmi~pb(age, method="GAIC", k=2) , data=dbbmi)
+p4 <- gamlss(bmi~pb(age, method="GAIC", 
+                    k=log(length(dbbmi$bmi))), 
+             data=dbbmi)
+
+plot(bmi~age , data=dbbmi, pch=20, col="gray")
+lines(fitted(p1)~dbbmi$age, col=2, lwd=2) 
+lines(fitted(p2)~dbbmi$age, col=3, lwd=2) 
+lines(fitted(p2)~dbbmi$age, col=3, lwd=2) 
+lines(fitted(p2)~dbbmi$age, col=5, lwd=2) 
+###############################################################
+###############################################################
+# P-SPLINES WHICH CAN SHRINK TO A CONSTANT: zpb()
+###############################################################
+###############################################################
+data(abdom)
+# add a nuisance variable
+abdom$x1 <- rNO(610, mu=5, sigma=5)
+# fitting the original x
+m0 <- gamlss(y~pb(x), data=abdom, trace=FALSE)
+# fitting extra x1 with pb()
+m1 <- gamlss(y~pb(x)+pb(x1), data=abdom, trace=FALSE)
+# fitting extra x1 with pbz()
+m2 <- gamlss(y~pbz(x)+pbz(x1), data=abdom, trace=FALSE)
+# smaller deviance but liitle reduction in deviance
+AIC(m0,m1,m2, k=2)
+# the second term x1 is not needed but 
+# m1 adds an extra degree of freedom
+###############################################################
+###############################################################
+# MONOTONIC P-SPLINES: mpb()
+###############################################################
+###############################################################
+library(gamlss)
+#   Creating the data 
+set.seed(1334)
+x = seq(0, 1, length = 1000)
+p = 0.4
+y = sin(2 * pi * p * x) + rnorm(1000) * 0.1
+plot(y~x, pch=20)
+# fitting a monotonic curve going up
+m1 <- gamlss(y~pbm(x), trace=FALSE)
+plot(y~x, pch=20)
+lines(fitted(m1)~x, col="red", lwd=2.5)
+# fitting a monotonic curve going down
+yy <- -y
+plot(yy~x)
+m2 <- gamlss(yy~pbm(x, mono="down"), trace=FALSE)
+plot(yy~x, pch=20)
+lines(fitted(m2)~x, col="red", lwd=2.5)
+###############################################################
+###############################################################
+# CYCLING C P-SPLINES
+###############################################################
+###############################################################
+###############################################################
+# plot(y~x, ylim=c(0,max(y)), pch=20) 
+# #abline(v=getSmo(m1)$knots, col=gray(.9))
+# matplot(x,bs(x, 6), type="l", col="gray",lty=1,  add=T)
+# 
+# m1 <- gamlss(y~bs(x,6))
+# lines(fitted(m1)~x, lwd=2, col="blue")
+# matplot(x,bs(x))
+
+# this is for an example how bs() is working
+
+plotBS <- function(y, x, knots=6)
+{
+  plot(y~x, ylim=c(0,max(y)), pch=20, col=gray(.5)) 
+  m1 <- gamlss(y~bs(x,knots), trace=F)
+  matplot(x,bs(x, knots), type="l", col="gray",lty=1,  add=T)
+  lines(fitted(m1)~x, lwd=2, col="blue")
+}
+op <- par(mfrow=c(2,2))
+plotBS(y,x,3); title("(a) knots=3")
+plotBS(y,x,7); title("(b) knots=7")
+plotBS(y,x,10); title("(b) knots=10")
+plotBS(y,x,20); title("(b) knots=20")
+par(op)
+```
+
+## Local Regression Pictures
+
+```{r}
+# creating plots for the local linear regression slides
+rm(list=ls())
+# ------------------------------------------------
+source('~/Dropbox/library/gamlss.demo/R/LocalRegressionDemo.R')
+#-------------------------------------------------
+#pdf("/Users/dimitriosstasinopoulos/Dropbox/talks/AdditiveTerms/Figures/LocalSmoothersd0.pdf")
+n <- 100
+x <- seq(0, 1, length = n)*1.4
+set.seed(123)
+y <- 1.2 + .3*sin(5  * x) + rnorm(n) * 0.2
+# degree 0 constant
+
+
+# pdf("/Users/dimitriosstasinopoulos/Dropbox/talks/AdditiveTerms/Figures/LocalSmoothersd0.pdf")
+op <- par(mfrow=c(2,2),mar=c(5,4,2,2)+0.1)
+LPOL(y,x, deg=0, position=5)
+title("(a) deg=0, position 5")
+LPOL(y,x, deg=0, position=40)
+title("(b) deg=0, position 40")
+LPOL(y,x, deg=0, position=70)
+title("(c) deg=0, position 70")
+LPOL(y,x, deg=0, position=95)
+title("(d) deg=0, position 95")
+par(op)
+dev.off()
+
+# degree 1 linear 
+#pdf("/Users/dimitriosstasinopoulos/Dropbox/talks/AdditiveTerms/Figures/LocalSmoothersd1.pdf")
+op <- par(mfrow=c(2,2),mar=c(5,4,2,2)+0.1)
+LPOL(y,x, deg=1, position=5)
+title("(a) deg=1, position 5")
+LPOL(y,x, deg=1, position=40)
+title("(b) deg=1, position 40")
+LPOL(y,x, deg=1, position=70)
+title("(c) deg=1, position 70")
+LPOL(y,x, deg=1, position=95)
+title("(d) deg=1, position 95")
+par(op)
+dev.off()
+
+# degree 2 linear 
+#pdf("/Users/dimitriosstasinopoulos/Dropbox/talks/AdditiveTerms/Figures/LocalSmoothersd2.pdf")
+op <- par(mfrow=c(2,2),mar=c(5,4,2,2)+0.1)
+LPOL(y,x, deg=2, position=5)
+title("(a) deg=2, position 5")
+LPOL(y,x, deg=2, position=40)
+title("(b) deg=2, position 40")
+LPOL(y,x, deg=2, position=70)
+title("(c) deg=2, position 70")
+LPOL(y,x, deg=2, position=95)
+title("(d) deg=2, position 95")
+par(op)
+#dev.off()
+
+# degree 3 linear 
+#pdf("/Users/dimitriosstasinopoulos/Dropbox/talks/AdditiveTerms/Figures/LocalSmoothersd3.pdf")
+op <- par(mfrow=c(2,2),mar=c(5,4,2,2)+0.1)
+LPOL(y,x, deg=3, position=5)
+title("(a) deg=3, position 5")
+LPOL(y,x, deg=3, position=40)
+title("(b) deg=3, position 40")
+LPOL(y,x, deg=3, position=70)
+title("(c) deg=3, position 70")
+LPOL(y,x, deg=3, position=95)
+title("(d) deg=3, position 95")
+par(op)
+#dev.off()
+
+
+# degree 0 constant
+#pdf("/Users/dimitriosstasinopoulos/Dropbox/talks/AdditiveTerms/Figures/LocalSmootherskernel0.pdf")
+op <- par(mfrow=c(2,2),mar=c(5,4,2,2)+0.1)
+WLPOL(y,x, deg=0, position=5)
+title("(a) deg=0, position 5")
+WLPOL(y,x, deg=0, position=40)
+title("(b) deg=0, position 40")
+WLPOL(y,x, deg=0, position=70)
+title("(c) deg=0, position 70")
+WLPOL(y,x, deg=0, position=95)
+title("(d) deg=0, position 95")
+par(op)
+#dev.off()
+
+#pdf("/Users/dimitriosstasinopoulos/Dropbox/talks/AdditiveTerms/Figures/LocalSmootherskernel1.pdf")
+op <- par(mfrow=c(2,2),mar=c(5,4,2,2)+0.1)
+WLPOL(y,x, deg=1, position=5)
+title("(a) deg=1, position 5")
+WLPOL(y,x, deg=1, position=40)
+title("(b) deg=1, position 40")
+WLPOL(y,x, deg=1, position=70)
+title("(c) deg=1, position 70")
+WLPOL(y,x, deg=1, position=95)
+title("(d) deg=1, position 95")
+par(op)
+#dev.off()
+
+#pdf("/Users/dimitriosstasinopoulos/Dropbox/talks/AdditiveTerms/Figures/LocalSmootherskernel2.pdf")
+# degree 2 quadratic
+op <- par(mfrow=c(2,2),mar=c(5,4,2,2)+0.1)
+WLPOL(y,x, deg=2, position=5)
+title("(a) deg=2, position 5")
+WLPOL(y,x, deg=2, position=40)
+title("(b) deg=2, position 40")
+WLPOL(y,x, deg=2, position=70)
+title("(c) deg=2, position 70")
+WLPOL(y,x, deg=2, position=95)
+title("(d) deg=2, position 95")
+par(op)
+#dev.off()
+
+#pdf("/Users/dimitriosstasinopoulos/Dropbox/talks/AdditiveTerms/Figures/LocalSmootherskernel3.pdf")
+# degree 3 cubic
+op <- par(mfrow=c(2,2),mar=c(5,4,2,2)+0.1)
+WLPOL(y,x, deg=3, position=5)
+title("(a) deg=3, position 5")
+WLPOL(y,x, deg=3, position=40)
+title("(b) deg=3, position 40")
+WLPOL(y,x, deg=3, position=70)
+title("(c) deg=3, position 70")
+WLPOL(y,x, deg=3, position=95)
+title("(d) deg=3, position 95")
+par(op)
+#dev.off()
+
+#pdf("/Users/dimitriosstasinopoulos/Dropbox/talks/AdditiveTerms/Figures/LoessBMI.pdf")
+library(gamlss)
+p1 <- gamlss(bmi~lo(~age), data=dbbmi)
+plot(bmi~age, data=dbbmi, pch=20, col="gray")
+lines(fitted(p1)~dbbmi$age, lwd=2)
+#dev.off()
+
+
+########################################################
+########################################################
+# scrip to demostrate locel polynomial fitting
+########################################################
+########################################################
+rm(list=ls())
+# ------------------------------------------------
+source('~/Dropbox/library/gamlss.demo/R/LocalRegressionDemo.R')
+
+########################################################
+########################################################
+# MEAN FITTING
+########################################################
+########################################################
+#op <- par(ask=TRUE)
+# span = 0.5 
+fv <- rep(0,100)
+for (i in 1:100)
+{
+  fv[i]<- LPOL(y,x, deg=0, position=i)
+  Sys.sleep(0.1)
+}
+
+plot(y~x, pch=20)
+lines(fv~x, col="red", lwd=2)
+points(fv~x, col="red",pch=20)
+#par(op)
+########################################################
+########################################################
+# span=0.2
+for (i in 1:100)
+{
+  fv[i]<- LPOL(y,x, deg=0, span=.2, position=i)
+  Sys.sleep(0.1)
+}
+plot(y~x, pch=20)
+lines(fv~x, col="red", lwd=2)
+points(fv~x, col="red",pch=20)
+#par(op)
+########################################################
+########################################################
+########################################################
+########################################################
+# LINEAR FITTING
+########################################################
+########################################################
+#op <- par(ask=TRUE)
+# span = 0.5 
+fv <- rep(0,100)
+for (i in 1:100)
+{
+  fv[i]<- LPOL(y,x, deg=1, position=i)
+  Sys.sleep(0.1)
+}
+
+plot(y~x, pch=20)
+lines(fv~x, col="red", lwd=2)
+points(fv~x, col="red",pch=20)
+#par(op)
+########################################################
+########################################################
+# QUADRATIC FITTING
+########################################################
+########################################################
+# span=0.2
+for (i in 1:100)
+{
+  fv[i]<- LPOL(y,x, deg=2, span=.2, position=i)
+  Sys.sleep(0.1)
+}
+plot(y~x, pch=20)
+lines(fv~x, col="red", lwd=2)
+points(fv~x, col="red",pch=20)
+#par(op)
+########################################################
+########################################################
+########################################################
+
+
+
+
+
+
+
+
+
+
+
+library(animation)
+ani.record(reset = TRUE) 
+for (i in 1:100) {
+  LPOL(y,x, deg=1, position=i)
+  ani.record()  # record the current frame
+}
+ani.replay()
+```
+
+## Local Regression Demo
+
+```{r}
+ demo.LocalRegression <- function(y=NULL, x=NULL,  span = 0.5,  position = trunc((n-1)/2) , 
+                                 deg=1)  # w = rep(1, length(y)), 
+ {
+ #---------------------------------------------------
+ # Simulate data
+   if (is.null(y))
+   {  
+       n <- 100
+      x <- seq(0, 1, length = n)*1.4
+    set.seed(123)
+    y <- 1.2 + .3*sin(5  * x) + rnorm(n) * 0.2
+   }
+      y <- y
+      x <- if (is.null(x)) stop ("the x-variable must be set here") else x
+   #}-------------------------------------------------------------
+  span  <- span
+  position <- trunc((n-1)/2)  
+  deg <- 1
+ if (interactive()) 
+     {
+     ps.smooth = function(panel)
+      {
+      span <- panel$span
+      deg   <- panel$deg
+      position <- panel$position
+          LPOL(y, x, span=span, deg=deg, position=position) 
+ 
+   panel
+       }
+         ps.panel = rp.control('Local Polinomial Smoother', size = c(400, 400),  span = 0.5)
+       #  ps.panel = rp.control('Local Poly Smoother', size = c(400, 200),  span = 0.5)
+          rp.slider(ps.panel, variable = span, from = 0.01, to = 2,  action = ps.smooth, resolution = 0.01, showvalue = TRUE, title = 'span')
+           rp.doublebutton(ps.panel, variable = deg,  action = ps.smooth, initval = 1,  step = 1, range = c(0, 4), showvalue = TRUE, "degree")
+         rp.slider(ps.panel, variable = position, from = 1, to = 100,  action = ps.smooth, resolution = 1,initval=49,  showvalue = TRUE, title = 'position')    
+     }
+ }
+# #---------------------------------------------------------------
+#--------------------------------------------------------------------
+
+LPOL <- function(y, x, span = 0.5,  position = trunc((n-1)/2) , w = rep(1, length(y)), deg=1 )
+{
+              n <- length(y)  
+              k <- trunc((n * span - 1)/2)  # the number obs below/above 
+            o.x <- order(x)
+            x.o <- x[o.x]
+            y.o <- y[o.x]
+            w.o <- w[o.x]
+    if (any(w.o < 0)) 
+        stop("weights should be positive")	
+            lo <-  ifelse(position-k<1,1,position-k)
+            up <- ifelse(position+k>n,n, position+k)
+          lowx <-  x.o[lo] 
+           upx <-  x.o[up]
+plot(y.o~x.o,  type="n",  ylab = "y", xlab="x")        
+    abline(v=lowx)
+    abline(v=upx)
+    polygon(c(lowx, upx, upx,lowx), c(min(y)-10,min(y)-100, max(y)+10, max(y)+10), col="grey90", lty=0)
+    points(y.o[-position]~x.o[-position])
+    points(y.o[position]~x.o[position], col="red", pch=18, cex=2)
+    abline(v=x.o[position])
+arrows(x.o[position], 0, x.o[position], 0.7, length =  0.25 ) 
+yy <- as.numeric(window(y.o, start = lo, end = up) )
+xx <- as.numeric(window(x.o, start = lo, end = up))
+   if (deg==0)
+     { 
+       fv <- rep(mean(yy), length(yy))	
+       lines(fv~xx)	
+       pos <- which(yy==y[position])
+       points(fv[pos]~xx[pos], col="blue", cex=2,  pch=20)
+       out <- fv[pos]
+     }
+     else
+    {
+      m1 <-lm(yy~poly(xx, deg))
+      lines(fitted(m1)~xx)	
+      pos <- which(yy==y[position])
+      points(fitted(m1)[pos]~xx[pos],  col="blue", cex=2, pch=20)
+      out <- fitted(m1)[pos]
+    }
+invisible(out)
+}
+#--------------------------------------------------------------------
+WLPOL<- function(y, x, sd = 0.5,  position = trunc((n-1)/2) , 
+                 w = rep(1, length(y)), deg=1, scale=1 )
+{
+                  n <- length(y)  
+ #                k <- trunc((n * span - 1)/2)  # the number obs below/above 
+               o.x <- order(x)
+             x.o <- x[o.x]
+             y.o <- y[o.x]
+     #       w.o <- w[o.x]
+     #if (any(w.o < 0)) 
+      #  stop("weights should be positive")	
+        
+        #lo <-  ifelse(position-k<1,1,position-k)
+        #up <- ifelse(position+k>n,n, position+k)
+         #lowx <-  x.o[lo] 
+         #upx   <-  x.o[up]
+     plot(y.o~x.o,  type="n",  ylab = "y", xlab="x", ylim=c(0,max(y)*1.1))        
+   
+    # xs <- seq(0,1.4,.05)
+    nd <-  dnorm(x.o, mean=x[position], sd=sd)
+    nds <- nd*scale
+    lines(nds~x.o)
+    # abline(v=lowx)
+    # abline(v=upx)
+    polygon(c(0,x.o, max(x)), c(0, nds, 0), col="grey90", lty=0)
+   points(y.o[-position]~x.o[-position])
+   points(y.o[position]~x.o[position], col="red", pch=18, cex=2)
+  abline(v=x.o[position])
+arrows(x.o[position], 0, x.o[position], 0.7, length =  0.25 ) 
+#yy <-  as.numeric(window(y.o, start = lo, end = up) )
+#xx <- as.numeric(window(x.o, start = lo, end = up))
+   if (deg==0)
+     { 
+       fv <- rep(weighted.mean(y.o, w=nd), length(y.o))	
+       lines(fv~x.o)	
+       points(fv[1]~x[position], col="blue", cex=2, pch=20)
+       out <- fv[1]
+     }
+     else
+    {
+      m1 <-lm(y.o~poly(x.o, deg), weights=nd)
+      lines(fitted(m1)~x.o)	
+      fvp <- predict(m1, newdata=data.frame(x.o=x[position]))
+      points(fvp~x[position],  col="blue", cex=2, pch=20)
+      out <- fvp
+    }
+invisible(out)
+}
+#--------------------------------------------------------------------
+```
+
+## Local Polynomial Smoothing
+```{r}
+########################################################
+########################################################
+# script to demonstrate local polynomial fitting
+########################################################
+########################################################
+rm(list=ls())
+# ------------------------------------------------
+# get the functions
+# DOWNLOAD "LocalRegressionDemo.R" AND PUT IT IN A DIRECTORY
+# SAY mydirectory
+# YOU CAN READ IT AS FOLLOWS BY CHANGING THE PATH
+source('~/Dropbox/library/gamlss.demo/R/LocalRegressionDemo.R')
+########################################################
+########################################################
+# generating the data
+########################################################
+########################################################
+n <- 100
+x <- seq(0, 1, length = n)*1.4
+set.seed(123)
+y <- 1.2 + .3*sin(5  * x) + rnorm(n) * 0.2
+plot(y~x)
+########################################################
+########################################################
+# Local neighbourhood smoothers
+########################################################
+########################################################
+# degree 0 constant
+########################################################
+########################################################
+# MEAN FITTING
+########################################################
+########################################################
+#op <- par(ask=TRUE)
+# span = 0.5 
+fv <- rep(0,100)
+for (i in 1:100)
+{
+  fv[i]<- LPOL(y,x, deg=0, position=i)
+  Sys.sleep(0.08)
+}
+
+plot(y~x, pch=20)
+lines(fv~x, col="red", lwd=2)
+points(fv~x, col="red",pch=20)
+########################################################
+########################################################
+# span=0.2
+for (i in 1:100)
+{
+  fv[i]<- LPOL(y,x, deg=0, span=.2, position=i)
+  Sys.sleep(0.1)
+}
+plot(y~x, pch=20)
+lines(fv~x, col="red", lwd=2)
+points(fv~x, col="red",pch=20)
+########################################################
+########################################################
+########################################################
+########################################################
+# span=2
+# fit a constant
+for (i in 1:100)
+{
+  fv[i]<- LPOL(y,x, deg=0, span=2, position=i)
+  Sys.sleep(0.05)
+}
+plot(y~x, pch=20)
+lines(fv~x, col="red", lwd=2)
+points(fv~x, col="red",pch=20)
+########################################################
+########################################################
+# span=0.01
+# interpolates the data
+for (i in 1:100)
+{
+  fv[i]<- LPOL(y,x, deg=0, span=0.01, position=i)
+  Sys.sleep(0.05)
+}
+plot(y~x, pch=20)
+lines(fv~x, col="red", lwd=2)
+points(fv~x, col="red",pch=20)
+#
+########################################################
+########################################################
+# LINEAR FITTING
+########################################################
+########################################################
+#op <- par(ask=TRUE)
+# span = 0.5 
+fv <- rep(0,100)
+for (i in 1:100)
+{
+  fv[i]<- LPOL(y,x, deg=1, position=i)
+  Sys.sleep(0.1)
+}
+
+plot(y~x, pch=20)
+lines(fv~x, col="red", lwd=2)
+points(fv~x, col="red",pch=20)
+#par(op)
+########################################################
+########################################################
+# QUADRATIC FITTING
+########################################################
+########################################################
+# span=0.2
+for (i in 1:100)
+{
+  fv[i]<- LPOL(y,x, deg=2, span=.2, position=i)
+  Sys.sleep(0.1)
+}
+plot(y~x, pch=20)
+lines(fv~x, col="red", lwd=2)
+points(fv~x, col="red",pch=20)
+#par(op)
+########################################################
+########################################################
+########################################################
+
+
+########################################################
+########################################################
+# kernel smoothers 
+########################################################
+########################################################
+fv <- rep(0,100)
+for (i in 1:100)
+{
+  fv[i]<- WLPOL(y,x, deg=0, sd=0.2, position=i)
+  Sys.sleep(0.08)
+}
+
+plot(y~x, pch=20)
+lines(fv~x, col="red", lwd=2)
+points(fv~x, col="red",pch=20)
+
+######################################################
+######################################################
+for (i in 1:100)
+{
+  fv[i]<- WLPOL(y,x, deg=0, sd=0.1, scale=.5, position=i)
+  Sys.sleep(0.08)
+}
+
+plot(y~x, pch=20)
+lines(fv~x, col="red", lwd=2)
+points(fv~x, col="red",pch=20)
+
+######################################################
+######################################################
+for (i in 1:100)
+{
+  fv[i]<- WLPOL(y,x, deg=2, sd=0.1, scale=.5, position=i)
+  Sys.sleep(0.08)
+}
+
+plot(y~x, pch=20)
+lines(fv~x, col="red", lwd=2)
+points(fv~x, col="red",pch=20)
+#####################################################
+#####################################################
+
+
+
+##################################################################
+##################################################################
+# Using the animation package
+##################################################################
+##################################################################
+library(animation)
+ani.record(reset = TRUE) 
+for (i in 1:100) {
+  LPOL(y,x, deg=1, position=i)
+  ani.record()  # record the current frame
+}
+ani.replay()
+##################################################################
+##################################################################
+# Using the animation package END
+##################################################################
+##################################################################
+# loess smoothing 
+##################################################################
+##################################################################
+m1 <- loess(y~x)
+plot(y~x, pch=20)
+lines(fitted(m1)~x, col="red", lwd=2)
+
+m1 <- loess(y~x, span=.1)
+plot(y~x, pch=20)
+lines(fitted(m1)~x, col="red", lwd=2)
+
+m1 <- loess(y~x, span=2)
+plot(y~x, pch=20)
+lines(fitted(m1)~x, col="red", lwd=2)
+##################################################################
+##################################################################
+# 2 dimensinal smoothing in loess()
+##################################################################
+##################################################################
+library(gamlss)
+r1 <- gamlss(R~lo(~Fl*A), data=rent, gamily=GA, bf.cyc=1)
+term.plot(r1)
+vis.lo(getSmo(r1))
+vis.lo(getSmo(r1), se=1.76)
+vis.lo(getSmo(r1), se=1.76, partial.resid = T)
+##################################################################
+##################################################################
+r2 <- gamlss(R~lo(~Fl*A), sigma.fo=~lo(~Fl*A), data=rent, gamily=GA, bf.cyc=1)
+term.plot(r2)
+vis.lo(getSmo(r2))
+vis.lo(getSmo(r2), se=1.76)
+vis.lo(getSmo(r1), se=1.76, partial.resid = T)
+
+vis.lo(getSmo(r2,"sigma") )
+vis.lo(getSmo(r2, "sigma"), se=1.76)
+vis.lo(getSmo(r2, "sigma"), se=1.76, partial.resid = T)
+#################################################################
+#################################################################
+```
+
+
+
