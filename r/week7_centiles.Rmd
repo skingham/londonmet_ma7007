@@ -1,0 +1,155 @@
+---
+title: "Week 7: Centiles"
+output: html_notebook
+---
+
+```{r}
+#########################################################################
+#########################################################################
+rm(list=ls())
+library(gamlss)
+## Loading required package: splines
+## Loading required package: gamlss.data
+##
+## Attaching package: 'gamlss.data'
+## The following object is masked from 'package:datasets':
+##
+## sleep
+## Loading required package: gamlss.dist
+## Loading required package: MASS
+## Loading required package: nlme
+## Loading required package: parallel
+## ********** GAMLSS Version 5.1-7 **********
+## For more on GAMLSS look at http://www.gamlss.org/
+## Type gamlssNews() to see new features/changes/bug fixes.
+#########################################################################
+#########################################################################
+# plottinf the data
+plot(head~age, data=db, pch=20, col="gray")
+```
+```{r}
+#########################################################################
+#########################################################################
+# using lms()
+m1 <- lms(head, age, data=db, trans.x=TRUE)
+
+m1
+
+#########################################################################
+#########################################################################
+# getting the centiles
+centiles(m1, xvar=db$age, legend=FALSE)
+
+centiles(m1, xvar=db$age)
+```
+
+```{r}
+#########################################################################
+#########################################################################
+# fitting using gamlss()
+# BCCGo
+t1 <- gamlss(head~pb(age^0.3785258), sigma.fo=~pb(age^0.3785258),
+nu.fo=~pb(age^0.3785258), tau.fo=~pb(age^0.3785258),
+data=db, family=BCCGo)
+
+#BCTo
+t2 <- gamlss(head~pb(age^0.3785258), sigma.fo=~pb(age^0.3785258),
+nu.fo=~pb(age^0.3785258), tau.fo=~pb(age^0.3785258),
+data=db, family=BCTo)
+
+# verifying they are the same
+AIC(m1, t2)
+
+# BCPEo
+t3 <- gamlss(head~pb(age^0.3785258), 
+             sigma.fo=~pb(age^0.3785258),
+             nu.fo=~pb(age^0.3785258), 
+             tau.fo=~pb(age^0.3785258),
+             data=db, family=BCPEo)
+
+AIC(m1, t1, t2, t3)
+
+#########################################################################
+#########################################################################
+# using the centile functions
+# centiles()
+centiles(t2, xvar=db$age)
+
+# centiles.fan()
+centiles.fan(t2, xvar=db$age)
+
+# centiles.com()
+centiles.com(t1,t2,t3, xvar=db$age)
+
+# centiles.spli()
+centiles.split(t2, xvar=age, xcut.points = c(2, 5))
+```
+
+```{r}
+########################################################################
+########################################################################
+# centile predict
+
+########################################################################
+# case 1
+# centiles for y given x
+newage <- seq(0.05,2, 0.05)
+mat1 <- centiles.pred(t2, xname="age", xvalues=newage,
+cent=c(5,25,50,75,95),plot=T)
+
+points(head~age, data=db, pch=20, col=gray(.9))
+
+head(mat1)
+
+#########################################################################
+# case 2
+# creating centiles not on percentages but standard normal scores
+mat2 <- centiles.pred(t2, 
+                      xname="age", xvalues=newage,
+                      type="standard-centiles", dev=c(-3,-2, 0, 2,3), plot=T)
+
+########################################################################
+# case 3
+# given x and y what is the z-score
+centiles.pred(t2, 
+              xname="age", xval=c(2,5,10,15),
+              yval=c(40, 52, 60, 55), type="z-scores")
+
+z.scores(m1, x=c(2,5,10,15), y=c(40, 52, 60, 55))
+
+#########################################################################
+#########################################################################
+# fitted values
+fittedPlot(t1, x=db$age)
+
+fittedPlot(t1,t2, x=db$age)
+
+fittedPlot(t1,t2,t3, x=db$age)
+
+#########################################################################
+#########################################################################
+# diagnostics
+wp(t2, ylim.all=1)
+
+# multiple
+wp(t2, xvar=db$age, ylim.worm=1.1 )
+
+# A two model worm plot
+library(AGD)
+wp.twin(t1,t2)
+
+# Q.statistics
+Q.stats(t2, xvar=db$age)
+
+Q.stats(t1, xvar=db$age)
+
+# ckecking the moment skewness and kurtosis of the data
+checkMomentSK(t2)
+
+checkMomentSK(t1)
+
+##########################################################################
+##########################################################################
+```
+
+
