@@ -27,6 +27,7 @@ To address the given task, we'll go through it step by step, writing R code for 
 Cohen et al. (2010) [3] analysed the handgrip (HG) strength in relation to gender and age in English schoolchildren. Here each student is required to analyse a different sample of 1000 from the original 3766 English boys. The data are stored in the packages gamlss.data under the name grip and contain the variables grip and age. The aim here is to create centile curves for grip given age.
 
 
+
 ```{r}
 # Install if not already installed
 if (!requireNamespace("gamlss", quietly = TRUE)) install.packages("gamlss")
@@ -43,12 +44,14 @@ library(gamlss.ggplots)
 
 ### (a) Read the data file by typing data(grip)into R. Note that the gamlss packages have to be downloaded first i.e. library(gamlss).
 
-### (b) In order to select your individual sample a unique seed number will be given to you. (In the example below we use the seed number 243 for demonstration.)
-
 ```{r}
 # Load the data
 data("grip", package = "gamlss.data")
+```
 
+### (b) In order to select your individual sample a unique seed number will be given to you. (In the example below we use the seed number 243 for demonstration.)
+
+```{r}
 set.seed(243) 
 index <- sample(3766, 1000) 
 mydata <- grip[index, ] 
@@ -82,10 +85,10 @@ plot(grip$age, grip$grip,
      col = "blue",
      pch = 19)
 
-# Optional: Add a smooth line to highlight the trend
+# Add a smooth line to highlight the trend
 lines(smooth.spline(grip$age, grip$grip), col = "red")
 
-# Plot grip against age
+# Plot sample grip against age
 plot(grip_sample$age, grip_sample$grip,
      xlab = "Age",
      ylab = "Grip Strength",
@@ -93,15 +96,15 @@ plot(grip_sample$age, grip_sample$grip,
      col = "blue",
      pch = 19)
 
-# Optional: Add a smooth line to highlight the trend
+# Add a smooth line to highlight the trend
 lines(smooth.spline(grip_sample$age, grip_sample$grip), col = "red")
 ```
 
 ### (d) Use the LMS method to fit the data (You can simplify some of the steps below by using the gamlss package function lms() but you still have to justify the choice of the final model.)  That is, fit the BCCG distribution for grip.
 
-gbccg <- gamlss(grip ∼pb(age), sigma.fo=∼pb(age), nu.fo=∼pb(age), data=da, family=BCCG)
+gbccg <- gamlss(grip ~pb(age), sigma.fo=~pb(age), nu.fo=~pb(age), data=da, family=BCCG)
 
-where the smoothing for age uses the P-splines function pb(), i.e. pb(age), for the predictors for parameter μ, σ and ν.
+where the smoothing for age uses the P-splines function pb(), i.e. pb(age), for the predictors for parameter $\mu$, $\sigma$ and $\nu$.
 
 How many degrees of freedom were used for smoothing in the model? Use the function edf()or edfAll().
 
@@ -114,8 +117,30 @@ When selecting the final model, especially after using smoothing techniques like
 
 The BCCG distribution is chosen for its flexibility in modeling skewed data, which is often encountered in physical measurements like grip strength. By adjusting for age with P-splines, the model can flexibly accommodate nonlinear age effects on the distribution parameters of grip strength, making it a powerful approach for analyzing such data.
 
-```{r}
+4.5 Choosing an appropriate distribution
+The choice of an appropriate response distribution is based on how well the distribution
+ts the data as judged by (i) the generalized Akaike information criterion GAIC, (ii)
+the prediction global deviance VDEV, (iii) the residuals, or (iv) other criteria.
+4.5.1 Generalized Akaike information criterion (GAIC)
+The tted global deviance is dened as minus twice the tted log likelihood (dened in
+Section 10.2):
+GDEV = 􀀀2^`(^) = 􀀀2
+Xn
+i=1
+log f(yi j^) (4.2)
+where ^ = (^; ^; ^; ^ ) are the tted parameters, which for regression models depend
+on the explanatory variables. The generalized Akaike information criterion, GAIC, is
+dened as
+GAIC() = GDEV +   df (4.3)
+where df is the eective degrees of freedom used for the tted model and  is a penalty
+for each degree of freedom used. The AIC and BIC/SBC are special cases of the GAIC
+when  = 2 and  = log n, respectively, i.e.
+AIC = GDEV + 2 df
+SBC = GDEV + log n  df :
+These measures are discussed in Chapter 3 of Stasinopoulos et al. [2017] and in Section
+11.5.5.
 
+```{r}
 # Fit the model
 gbccg <- gamlss(grip ~ pb(age),
                 sigma.fo = ~ pb(age),
@@ -128,13 +153,11 @@ edf_details <- edfAll(gbccg)
 
 # Print the EDF for each parameter
 print(edf_details)
-
 ```
-
 
 ### (e) Use the fitted values from the LMS model in (d) as starting values for fitting the BCT and the BCPE distributions to the data
 
-e.g. `gbct <- gamlss(grip∼pb(age), sigma.fo = ∼pb(age), nu.fo = ∼pb(age), tau.fo = ∼pb(age), data=da, family=BCT, start.from=gbccg)`
+e.g. `gbct <- gamlss(grip~pb(age), sigma.fo = ~pb(age), nu.fo = ~pb(age), tau.fo = ~pb(age), data=da, family=BCT, start.from=gbccg)`
 
 What are the effective degrees of freedom fitted for the parameters? Try to interpret the effective degrees of freedom.
 
@@ -148,9 +171,10 @@ Interpreting the Effective Degrees of Freedom:
 
 The mu, sigma, nu, and tau parameters represent different aspects of the distribution being modeled:
 
-*    mu (μ): The location parameter (central tendency).
-*    sigma (σ): The scale parameter (dispersion or variability).
-*    nu (ν) and tau (τ): Parameters that control the shape of the distribution, including skewness and kurtosis.
+*   mu ($\mu$): The location parameter (central tendency).
+*   sigma ($\sigma$): The scale parameter (dispersion or variability).
+*   nu ($\nu$) and 
+*   tau ($\tau$): Parameters that control the shape of the distribution, including skewness and kurtosis.
 
 Choosing between the BCT and BCPE models, and interpreting their parameters' EDFs, depends on the fit quality, predictive performance, and the complexity trade-off. This process is crucial for understanding how age influences grip strength across its distribution and ensuring the model's generalizability.
 
@@ -182,8 +206,14 @@ edf_bct <- edfAll(gbct)
 edf_bcpe <- edfAll(gbcpe)
 
 # Print the EDF for each model
+print("BCT EDF")
 print(edf_bct)
+print("BCPE EDF")
 print(edf_bcpe)
+```
+
+```{r}
+edfAll(gbcpe)
 ```
 
 ### (f) Use the generalised Akaike information criterion, GAIC, to compare the three models.
@@ -240,7 +270,7 @@ lines(age_seq, fitted_gbct, col='red')
 legend("topright", legend=c("BCCG", "BCT"), col=c("blue", "red"), lty=1, cex=0.8)
 ```
 
-### (h) Obtain a centile plot for the fitted models in (d) and (e) using centiles() orcentiles.split() and compare them.
+### (h) Obtain a centile plot for the fitted models in (d) and (e) using centiles() or centiles.split() and compare them.
 
 Interpreting the Comparison:
 
@@ -259,11 +289,11 @@ centiles(gbccg, xvar=grip_sample$age, cent=c(0.1, 0.4, 2,10,25,50,75,90,98,99.6,
 # Plot centiles for BCCG model
 plot(grip_sample$age, grip_sample$grip, col="gray90", main="Centile Comparison", xlab="Age", ylab="Grip Strength")
 
-centiles(gbccg, xvar = grip_sample$age, col = "blue", lty = 1, add = TRUE)
+centiles(gbccg, xvar = grip_sample$age, col = "blue", lty = 1)
 legend("topright", legend=c("BCCG"), col=c("blue"), lty=1, cex=0.8)
 
 # Add centiles for BCT model to the existing plot
-centiles(gbct, xvar = grip_sample$age, col = "red", lty = 2, add = TRUE)
+centiles(gbct, xvar = grip_sample$age, col = "red", lty = 2)
 # Update the legend to include BCT
 legend("topright", legend=c("BCCG", "BCT"), col=c("blue", "red"), lty=1:2, cex=0.8)
 
