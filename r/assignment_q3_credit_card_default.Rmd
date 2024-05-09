@@ -24,6 +24,7 @@ if (!requireNamespace("gamlss", quietly = TRUE)) install.packages("gamlss")
 if (!requireNamespace("gamlss.data", quietly = TRUE)) install.packages("gamlss.data")
 
 # Load the packages
+library(doParallel)
 library(ggplot2)
 library(corrplot)
 library(gamlss)
@@ -31,7 +32,6 @@ library(gamlss.ggplots)
 library(gamlss.add)
 library(gamlss.data)
 library(gamlss.foreach)
-
 ```
 
 ## Including Plots
@@ -41,7 +41,11 @@ You can also embed plots, for example:
 ```{r pressure, echo=FALSE}
 ########################################################################
 ########################################################################
-cc <- read.csv("/Users/skingham/Projects/LondonMet/londonmet_ma7007/data/UCI_Credit_Card.csv")
+cc <- read.csv("../data/UCI_Credit_Card.csv")
+
+# Just drop the ID column
+cc <- cc[, -c(1)]
+
 ########################################################################
 # Schema of UCI_Credit_Card.csv
 # https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients
@@ -77,12 +81,11 @@ dim(cc)
 ```
 
 ```{r}
-
 # may be too many for demonstration 
 ########################################################################
 ########################################################################
-# I create one with less variable
-cc1 <- cc[, -c(1, 9, 10, 11, 12, 15, 16, 17, 18, 21, 22, 23, 24)]
+# Drop older bill_amts
+cc1 <- cc[, -c(13, 14, 15, 16, 17)]
 dim(cc1)
 names(cc1)
 head(cc1)
@@ -90,7 +93,7 @@ head(cc1)
 ```
 
 ```{r}
-cc2  <- cc1[, -c(7, 9, 11)]
+cc2  <- cc1[, -c(14, 15, 16, 17, 18)]
 head(cc2)
 names(cc2)
 dim(cc2)
@@ -98,7 +101,7 @@ dim(cc2)
 ```
 
 ```{r}
-cc3 <- cc[, -c(1,11,12,17,18,23,24)]
+cc3 <- cc[, -c(10, 11, 15, 16,17, 21, 22,23)]
 head(cc3)
 names(cc3)
 dim(cc3)
@@ -108,20 +111,20 @@ dim(cc3)
 ########################################################################
 ########################################################################
 # exploring you data 
-plot(cc2)
+plot(cc3)
 # default.payment.next.month line is of interest 
 ```
 
 ```{r}
 # also look for high correlation in the x's
-which.Data.Corr(cc2, r=0.5)
-cc_cor2 <- cor(cc2)
-corrplot(cc_cor2)
+which.Data.Corr(cc3, r=0.3)
+cc_cor3 <- cor(cc3)
+corrplot(cc_cor3)
 ```
 
 ```{r}
 # also look for high correlation in the x's
-which.Data.Corr(cc, r=0.5)
+which.Data.Corr(cc, r=0.3)
 cc_cor <- cor(cc)
 corrplot(cc_cor)
 ```
@@ -129,23 +132,24 @@ corrplot(cc_cor)
 ```{r}
 ######################################################################## 
 # is any missing
-dim(cc2)
-#dim(is.na(cc2)) 
-dim(na.omit(cc2))
+dim(cc3)
+#dim(is.na(cc3)) 
+dim(na.omit(cc3))
 # no missing 
 ```
 
 ```{r}
 ####################################################################### 
 # look of outliers
-plot(default.payment.next.month~LIMIT_BAL, data=cc2)
-plot(default.payment.next.month~BILL_AMT1, data=cc2)
+plot(default.payment.next.month~LIMIT_BAL, data=cc3)
+
+plot(default.payment.next.month~BILL_AMT1, data=cc3)
 #possible transforming?
-plot(default.payment.next.month~sqrt(BILL_AMT1), data=cc2)
-plot(default.payment.next.month~log(BILL_AMT1), data=cc2)
+plot(default.payment.next.month~sqrt(BILL_AMT1), data=cc3)
+plot(default.payment.next.month~log(BILL_AMT1), data=cc3)
 # I am not sure
-plot(default.payment.next.month~PAY_0, data=cc2)
-plot(default.payment.next.month~log(PAY_0), data=cc2)
+plot(default.payment.next.month~PAY_0, data=cc3)
+plot(default.payment.next.month~log(PAY_0), data=cc3)
 
 ```
 
@@ -233,16 +237,65 @@ plot(default.payment.next.month~PAY_AMT6, data=cc)
 # checking simple regression with normal errors 
 names(cc2)
 
-mno <- gamlss(default.payment.next.month ~ LIMIT_BAL, 
-              family = BI, # NO is for Normal distribution
+mbi_1 <- gamlss(default.payment.next.month ~ LIMIT_BAL, 
+              family = BI, # BI is for Binomial distribution
               data = cc)
+wp(mbi_1)
 
-mno <- gamlss(default.payment.next.month~LIMIT_BAL+(BILL_AMT1)+(EDUCATION)+factor(MARRIAGE)+
-              PAY_0+PAY_AMT1+AGE, 
-              family=BI, data=cc)
-resid_plots(mno)
+mbi_2 <- gamlss(default.payment.next.month~LIMIT_BAL+
+                  AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+                  BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2, 
+              family=BI, # BI is for Binomial distribution
+              data=cc)
+wp(mbi_3)
 
-plot(mno)
+mbi_3 <- gamlss(default.payment.next.month~LIMIT_BAL+
+                  PAY_0+PAY_2, 
+              family=BI, # BI is for Binomial distribution
+              data=cc)
+wp(mbi_3)
+
+mbi_4 <- gamlss(default.payment.next.month~LIMIT_BAL+
+                  PAY_0+PAY_2+
+                  AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE), 
+              family=BI, # BI is for Binomial distribution
+              data=cc)
+wp(mbi_4)
+
+mbi_5 <- gamlss(default.payment.next.month~LIMIT_BAL+
+                  PAY_0+PAY_2+PAY_3+
+                  BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3, 
+              family=BI, # BI is for Binomial distribution
+              data=cc)
+wp(mbi_5)
+
+mbi_6 <- gamlss(default.payment.next.month~LIMIT_BAL+
+                  PAY_0+PAY_2+
+                  AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+                  BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2, 
+              family=BI, # BI is for Binomial distribution
+              data=cc)
+wp(mbi_6)
+
+mbi_7 <- gamlss(default.payment.next.month~LIMIT_BAL+
+                  PAY_0+PAY_2+PAY_3+
+                  AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+                  BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3, 
+              family=BI, # BI is for Binomial distribution
+              data=cc)
+wp(mbi_7)
+
+mbi <- gamlss(default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+AGE+
+                factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+
+                BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6, 
+              family=BI, # BI is for Binomial distribution
+              data=cc)
+resid_plots(mbi)
+
+plot(mbi)
+wp(mbi)
+
+GAIC(mbi, mbi_1, mbi_2, mbi_3, mbi_4, mbi_5, mbi_6, mbi_7)
 ```
 
 ```{r}
@@ -250,28 +303,58 @@ plot(mno)
 # we may need a positive real line distribution
 # The gamma distribution
 
-mga <- gamlss(default.payment.next.month~LIMIT_BAL+(BILL_AMT1)+(EDUCATION)+MARRIAGE+PAY_0+PAY_AMT1+AGE, 
-              family=BI, data=cc)
-GAIC(mno, mga)
-resid_plots(mga)
-wp(mga)
+mbb <- gamlss(default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+AGE+
+                factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+
+                BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6, 
+              family=BB, data=cc)
+GAIC(mbi, mbb)
+resid_plots(mbb)
+wp(mbb)
+```
+
+```{r}
+mdbi <- gamlss(default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+AGE+
+                factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+
+                BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6, 
+              family=DBI, 
+              data=cc)
+GAIC(mbi, mdbi)
+resid_plots(mdbi)
+wp(mdbi)
+```
+
+```{r}
+mzibb <- gamlss(default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+AGE+
+                factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+
+                BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6, 
+                family=ZIBB, 
+                data=cc)
+GAIC(mbi, mzibb)
+resid_plots(mzibb)
+wp(mzibb)
 ```
 
 ```{r}
 # still too many extreme values use chooseDist
 
-T1 <- chooseDist(mga, type="binom", parallel="snow", ncpuss=8)
+T1 <- chooseDist(mbi, type="binom", parallel="snow", ncpuss=8)
 T1
 ```
 
 ```{r}
-mbct1 <- gamlss(default.payment.next.month~LIMIT_BAL+(BILL_AMT1)+(EDUCATION)+MARRIAGE+PAY_0+PAY_AMT1+AGE, 
-                family=ZIBB, data=cc)
-resid_plots(mbct1)
-#resid_plots(mbct1)
-resid_qqplot(mbct1)
-resid_wp(mbct1)
-model_wp(mbct1, mga)
+# 6 default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6,
+# 4 default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4,
+# 3 default.payment.next.month~LIMIT_BAL+PAY_0+AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4,
+# 2 default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4,
+mzibb6 <- gamlss(default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6,
+                 family=ZIBB, 
+                 data=cc)
+GAIC(mbi, mzibb, mzibb1, mzibb6, mzibb5, mzibb4, mzibb3, mzibb2)
+resid_plots(mzibb3)
+wp(mzibb3)
+#resid_qqplot(mzibb1)
+#resid_wp(mzibb1)
+model_wp(mbi, mzibb3)
 
 ```
 
@@ -279,76 +362,79 @@ model_wp(mbct1, mga)
 #######################################################################
 #######################################################################
 # first parametric model 
-mbct0 <- gamlss(default.payment.next.month~1,family=ZIBB, data=cc)
-mbct2 <- stepGAICAll.B(mbct0, scope=list(lower=~1, 
-                                         upper=~LIMIT_BAL+(BILL_AMT1)+(EDUCATION)+MARRIAGE+PAY_0+PAY_AMT1+AGE),
-                       parallel="snow", ncpuss=8)
+mbi0 <- gamlss(default.payment.next.month~1,family=BI, data=cc)
+mbi2 <- stepGAICAll.B(mbi0, 
+                      scope=list(lower=~1, 
+                                 upper=~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+
+                                        AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+                                        BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6),
+                      parallel="snow", ncpuss=12)
 ```
 
 ```{r}
 # checking the model
-mbct2
-resid_plots(mbct2)
-resid_plots(mbct2)
-resid_wp(mbct2)
+mbi2
+resid_plots(mbi2)
+resid_plots(mbi2)
+resid_wp(mbi2)
 ```
 
 ```{r}
 # interpretation of the model 
-fitted_terms(mbct2) # mu
-fitted_terms(mbct2,"sigma") # sigma
-fitted_terms(mbct2,"nu")# nu
-#fitted_terms(mbct2,"tau")
-summary(mbct2)
+fitted_terms(mbi2) # mu
+# fitted_terms(mbi2,"sigma") # sigma
+# fitted_terms(mbi2,"nu")# nu
+# fitted_terms(mbi2,"tau")
+summary(mbi2)
 
 ```
 
 ```{r}
-fitted_pdf(mbct2, obs=c(1000,2000,3000, 4000), from=0, to=1000000 )
-
-
-
+fitted_pdf(mbi2, obs=c(1000,2000,3000, 4000), from=0, to=1000000 )
 #######################################################################
 ```
 
 ```{r}
 #######################################################################
-mbct3 <- stepGAICAll.A(mbct0, 
-                       scope=list(lower=~1, upper=~LIMIT_BAL+(BILL_AMT1)+(EDUCATION)+MARRIAGE+PAY_0+PAY_AMT1+AGE),
-                       parallel="snow", ncpuss=8)
-mbct3
+mbi3 <- stepGAICAll.A(mbi0, 
+                      scope=list(lower=~1, 
+                                 upper=~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+
+                                        AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+                                        BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6),
+                      parallel="snow", ncpuss=12)
+mbi3
+summary(mbi3)
 
-summary(mbct3)
-GAIC(mbct1, mbct2, mbct3)
+GAIC(mbi, mbi2, mbi3)
 ```
 
 ```{r}
 # checking the model
-#resid_plot(mbct3)
-resid_plots(mbct3)
-resid_wp(mbct3)
+#resid_plot(mbi3)
+resid_plots(mbi3)
+resid_wp(mbi3)
 ```
 
 ```{r}
 # interpretation of the model 
-fitted_terms(mbct3)
-#fitted_terms(mbct3,"sigma")
-fitted_terms(mbct3,"nu")
-#fitted_terms(mbct3,"tau")
+fitted_terms(mbi3)
+#fitted_terms(mbi3,"sigma")
+# fitted_terms(mbi3,"nu")
+#fitted_terms(mbi3,"tau")
 
-fitted_terms(mbct3, partial=T)
-# fitted_terms(mbct3,"sigma",  partial=T) # The model for sigma has only the constant fitted
-fitted_terms(mbct3,"nu", partial=T)
-#fitted_terms(mbct3,"tau", partial=T)
+fitted_terms(mbi3, partial=T)
+# fitted_terms(mbi3,"sigma",  partial=T) # The model for sigma has only the constant fitted
+# fitted_terms(mbi3,"nu", partial=T)
+# fitted_terms(mbi3,"tau", partial=T)
 ```
 
 ```{r}
-mbct3
-summary(mbct3)
-fitted_pdf(mbct3, obs=c(1000,2000,3000, 4000), from=0, to=1000000 )
-fitted_pdf(mbct3, obs=1:100, from=0, to=1000000 )
+mbi3
+summary(mbi3)
+fitted_pdf(mbi3, obs=c(1000,2000,3000, 4000), from=0, to=1000000 )
+fitted_pdf(mbi3, obs=1:100, from=0, to=1000000 )
 
-GAIC(mbct1, mbct2, mbct3)
+GAIC(mbi, mbi2, mbi3)
 
 #######################################################################
 ```
@@ -356,72 +442,85 @@ GAIC(mbct1, mbct2, mbct3)
 ```{r}
 #######################################################################
 # smoothing terms
-mbct4 <- stepGAICAll.A(mbct0, scope=list(lower=~1, 
-                                         upper=~pb(LIMIT_BAL)+pb((BILL_AMT1))+pb((EDUCATION))+pb(MARRIAGE)+
-                                           pb(PAY_0)+pb(PAY_AMT1)+pb(AGE)),
-                       parallel="snow", ncpuss=8, k=log(4835))
-mbct4
+mbi4 <- stepGAICAll.A(mbi0, scope=list(lower=~1, 
+                                         upper=~pb(LIMIT_BAL)+pb(PAY_0)+pb(PAY_2)+pb(PAY_3)+pb(PAY_4)+pb(PAY_5)+pb(PAY_6)+
+                                           pb(AGE)+pb(factor(EDUCATION))+pb(factor(SEX))+pb(factor(MARRIAGE))+
+                                           pb(BILL_AMT1)+pb(PAY_AMT1)+pb(BILL_AMT2)+pb(PAY_AMT2)+pb(BILL_AMT3)+pb(PAY_AMT3)+
+                                           pb(BILL_AMT4)+pb(PAY_AMT4)+pb(BILL_AMT5)+pb(PAY_AMT5)+pb(BILL_AMT6)+pb(PAY_AMT6)),
+                       parallel="snow", ncpuss=12, k=log(nrows(cc)))
+mbi4
+```
 
-fitted_terms(mbct3, partial=T)
-fitted_terms(mbct4, partial=T)
-fitted_terms(mbct4,"sigma",  partial=T)
-fitted_terms(mbct4,"nu", partial=T)
-#fitted_terms(mbct4,"tau", partial=T)
+```{r}
+fitted_terms(mbi3, partial=T)
+fitted_terms(mbi4, partial=T)
+# fitted_terms(mbi4,"sigma",  partial=T)
+# fitted_terms(mbi4,"nu", partial=T)
+#fitted_terms(mbi4,"tau", partial=T)
 
-resid_plot(mbct3)
-resid_plots(mbct3)
-resid_wp(mbct3)
+resid_plot(mbi3)
+resid_plots(mbi3)
+resid_wp(mbi3)
 
-GAIC(mbct1, mbct2, mbct3, mbct4)
+GAIC(mbi, mbi2, mbi3, mbi4)
 
 ```
 
 ```{r}
-#save(mbct2, mbct3, mbct4, mbctnn, mbcttr, file="/Users/...")
+#save(mbi2, mbi3, mbi4, mbinn, mbitr, file="/Users/...")
 #load("/Users/...")
 #######################################################################
 # neural network 
-mbctnn <- gamlss(default.payment.next.month~nn(~LIMIT_BAL+(BILL_AMT1)+(EDUCATION)+MARRIAGE+
-                             PAY_0+PAY_AMT1+AGE,  size=10, decay=0.01),
-                 sigma.fo=~nn(~LIMIT_BAL+(BILL_AMT1)+(EDUCATION)+MARRIAGE+
-                                PAY_0+PAY_AMT1+AGE,  size=5, decay=0.1),
+mbinn <- gamlss(default.payment.next.month~nn(~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+
+                                              AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+                                              BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6,  
+                                              size=10, decay=0.01),
+                 # sigma.fo=~nn(~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+
+                 #              AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+                 #              BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6,  size=5, decay=0.1),
                  #  nu.fo=~nn(~LIMIT_BAL+sqrt(BILL_AMT1)+log(EDUCATION)+MARRIAGE+
                  #                PAY_0+PAY_AMT1+AGE),
                  #  tau.fo=~nn(~LIMIT_BAL+sqrt(BILL_AMT1)+log(EDUCATION)+MARRIAGE+
                  #              PAY_0+PAY_AMT1+AGE),
-                 family=ZIBB, data=cc2,  c.crit=0.01)
+                 family=BI, data=cc,  c.crit=0.01)
 
-plot(getSmo(mbctnn))  
-plot(getSmo(mbctnn, parameter="sigma"))       
-resid_plots(mbctnn )
-resid_wp(mbctnn )
+plot(getSmo(mbinn))  
+plot(getSmo(mbinn, parameter="sigma"))       
+resid_plots(mbinn )
+resid_wp(mbinn )
 
-GAIC(mbct1, mbct2, mbct3, mbct4, mbctnn)
-GAIC(mbct1, mbct2, mbct3, mbct4, mbctnn, k=log(4835))
+GAIC(mbi, mbi2, mbi3, mbi4, mbinn)
+GAIC(mbi, mbi2, mbi3, mbi4, mbinn, k=log(nrows(cc)))
 #######################################################################
 #######################################################################                
 # regression trees
 
-mbcttr <- gamlss(default.payment.next.month~tr(~LIMIT_BAL+(BILL_AMT1)+(EDUCATION)+MARRIAGE+PAY_0+PAY_AMT1+AGE),
-                 sigma.fo=~tr(~LIMIT_BAL+(BILL_AMT1)+(EDUCATION)+MARRIAGE+PAY_0+PAY_AMT1+AGE),
-                 # nu.fo=~tr(~LIMIT_BAL+sqrt(BILL_AMT1)+log(EDUCATION)+MARRIAGE+
-                 #            PAY_0+PAY_AMT1+AGE),
-                 # tau.fo=~nn(~LIMIT_BAL+sqrt(BILL_AMT1)+log(EDUCATION)+MARRIAGE+
-                 #             PAY_0+PAY_AMT1+AGE),
-                 family=MN3, data=cc2, c.crit=0.01,  bf.cyc=1)
-plot(getSmo(mbcttr))
-text(getSmo(mbcttr))
+mbitr <- gamlss(default.payment.next.month~tr(~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+
+                                        AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+                                        BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6),
+                  # sigma.fo=~tr(~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+
+                  #                      AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+                  #                      BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6),
+                  # nu.fo=~tr(~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+
+                  #                      AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+                  #                      BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6),
+                  # tau.fo=~tr(~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+
+                  #                     AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+                  #                      BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6),
+                  family=BI, data=cc, c.crit=0.01,  bf.cyc=1)
+plot(getSmo(mbitr))
+text(getSmo(mbitr))
 
-plot(getSmo(mbcttr, parameter="sigma"))
-text(getSmo(mbcttr, parameter="sigma"))
+plot(getSmo(mbitr, parameter="sigma"))
+text(getSmo(mbitr, parameter="sigma"))
 
-#plot(getSmo(mbcttr, parameter="nu"))
-#text(getSmo(mbcttr, parameter="nu"))
-getSmo(mbcttr, parameter="nu")
-resid_plots(mbcttr)
+#plot(getSmo(mbitr, parameter="nu"))
+#text(getSmo(mbitr, parameter="nu"))
+getSmo(mbitr, parameter="nu")
+resid_plots(mbitr)
 
-GAIC(mbct1, mbct2, mbct3, mbct4, mbctnn, mbcttr) 
-GAIC(mbct1, mbct2, mbct3, mbct4, mbctnn, mbcttr,  k=log(4835))
+GAIC(mbi, mbi2, mbi3, mbi4, mbinn, mbitr) 
+GAIC(mbi1, mbi2, mbi3, mbi4, mbinn, mbitr,  k=log(nrows(cc)))
 #####################################################################
 ```
 
@@ -487,6 +586,6 @@ m33 <- gamlss(form2, data=cc3, family=BB)
 resid_plots(m33)
 resid_wp(m33)
 
-GAIC(m2, mod1, mod2,mod3, m33, k=log(4884))
+GAIC(m2, mod1, mod2,mod3, m33, k=log(rows(cc)-1)
 #########################################################
 ```
