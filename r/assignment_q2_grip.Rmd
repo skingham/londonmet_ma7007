@@ -5,23 +5,6 @@ output:
     keep_tex: true
 ---
 
-This document describes the coursework for MA7007. The coursework involves the statistical analysis of real data sets in R and the writing of a report to describe the results. [Note, the emphasis is on the report, which means that producing just computer output it is not enough. The output should be complimented with intelligent comments and explanations].
-
-The coursework consists of the following:
-
-* Each student is given two datasets. 
-
-* Each student is required to find a third dataset, related to their own interest.
-
-* Each student is expected to analyse the first two datasets following the instructions given below.
-
-* For the third dataset the student is required to show their own initiative in analysing the data.
-
-* Each student should write a small report (less than 5000 words) describing how they have done the three analyses and describing their results. Section 2 gives instructions on writing the report.
-
-To address the given task, we'll go through it step by step, writing R code for each part. The task involves analyzing BMI data for Dutch boys aged 10 to 11 years from the `dbbmi` dataset in the `gamlss.data` package, fitting parametric distributions, and selecting an appropriate one based on the analysis.
-
-
 ## Instructions on how to analyse the second data set
 
 Cohen et al. (2010) [3] analysed the handgrip (HG) strength in relation to gender and age in English schoolchildren. Here each student is required to analyse a different sample of 1000 from the original 3766 English boys. The data are stored in the packages gamlss.data under the name grip and contain the variables grip and age. The aim here is to create centile curves for grip given age.
@@ -29,17 +12,15 @@ Cohen et al. (2010) [3] analysed the handgrip (HG) strength in relation to gende
 
 
 ```{r}
-# Install if not already installed
-if (!requireNamespace("gamlss", quietly = TRUE)) install.packages("gamlss")
-if (!requireNamespace("gamlss.data", quietly = TRUE)) install.packages("gamlss.data")
+# suppress the warnings by setting warn=-1 
+options(warn=-1)
 
 # Load the packages
-library(gamlss)
-library(gamlss.data)
-library(MASS)
-library(gamlss)
 library(ggplot2)
+library(gamlss)
 library(gamlss.ggplots)
+library(gamlss.add)
+library(gamlss.data)
 ```
 
 ### (a) Read the data file by typing data(grip)into R. Note that the gamlss packages have to be downloaded first i.e. library(gamlss).
@@ -111,34 +92,38 @@ How many degrees of freedom were used for smoothing in the model? Use the functi
 When selecting the final model, especially after using smoothing techniques like P-splines (pb()), it's crucial to balance fit and complexity. Here are factors to consider in justifying your model choice:
 
 *    Goodness of Fit: Use diagnostic plots and goodness-of-fit statistics to ensure the model adequately captures the relationship between grip strength and age.
+
 *    Complexity vs. Simplicity: A model with more degrees of freedom can capture more complex relationships but risks overfitting. Ensure the EDF values suggest a model complex enough to capture essential patterns without overfitting.
+
 *    Comparison with Alternative Models: If applicable, compare your chosen model with alternatives using information criteria like AIC or BIC, which penalize model complexity.
+
 *    Interpretability: Ensure the model remains interpretable. While more complex models might provide a marginally better fit, they should not do so at the expense of being understandable.
 
 The BCCG distribution is chosen for its flexibility in modeling skewed data, which is often encountered in physical measurements like grip strength. By adjusting for age with P-splines, the model can flexibly accommodate nonlinear age effects on the distribution parameters of grip strength, making it a powerful approach for analyzing such data.
 
 4.5 Choosing an appropriate distribution
 The choice of an appropriate response distribution is based on how well the distribution
-ts the data as judged by (i) the generalized Akaike information criterion GAIC, (ii)
+fits the data as judged by (i) the generalized Akaike information criterion GAIC, (ii)
 the prediction global deviance VDEV, (iii) the residuals, or (iv) other criteria.
+
 4.5.1 Generalized Akaike information criterion (GAIC)
-The tted global deviance is dened as minus twice the tted log likelihood (dened in
-Section 10.2):
-GDEV = 􀀀2^`(^) = 􀀀2
-Xn
-i=1
-log f(yi j^) (4.2)
-where ^ = (^; ^; ^; ^ ) are the tted parameters, which for regression models depend
+The fitted global deviance is defined as minus twice the fitted log likelihood (defined in Section 10.2):
+$GDEV = -2 \sum^{n}_{i=1} log f(yi | j\Theta)$ (4.2)
+
+where $\Theta = (\mu; \sigma; \nu; \tau )$ are the fitted parameters, which for regression models depend
 on the explanatory variables. The generalized Akaike information criterion, GAIC, is
-dened as
-GAIC() = GDEV +   df (4.3)
-where df is the eective degrees of freedom used for the tted model and  is a penalty
+defined as $GAIC(\kappa) = GDEV + \kappa . df$ (4.3)
+
+where $df$ is the effective degrees of fr
+eedom used for the fitted model and $\kappa$ is a penalty
 for each degree of freedom used. The AIC and BIC/SBC are special cases of the GAIC
-when  = 2 and  = log n, respectively, i.e.
-AIC = GDEV + 2 df
-SBC = GDEV + log n  df :
-These measures are discussed in Chapter 3 of Stasinopoulos et al. [2017] and in Section
-11.5.5.
+when $\kappa = 2$ and $\kappa = log n$, respectively, i.e.
+
+$AIC = GDEV + 2 df$
+
+$SBC = GDEV + log n . df$
+
+These measures are discussed in Chapter 3 of Stasinopoulos et al. [2017] and in Section 11.5.5.
 
 ```{r}
 # Fit the model
@@ -281,15 +266,15 @@ Interpreting the Comparison:
 By comparing these centile plots, you get a visual representation of how each model performs across the range of ages, which can inform your decision on the best model for your analysis based on how well they fit the centiles to the observed data.
 
 ```{r}
-#centilesTwo(gbccg, grid.x1 = age, grid.x2 = grip, )
-centiles(gbccg, xvar=grip_sample$age, cent=c(0.1, 0.4, 2,10,25,50,75,90,98,99.6, 99.9), ylab="grip", xlab="age", legend=FALSE)
+centilesTwo(gbccg, 10:16, seq(15, 40, 5), age,  grip, cent=0.05, dist=.1, xlab="age", ylab='grip')
+centiles(gbccg, xvar=grip_sample$age, cent=c(0.1, 0.4, 2,10, 25, 50,75,90,98,99.6, 99.9), ylab="grip", xlab="age", legend=FALSE)
 ```
 
 ```{r}
 # Plot centiles for BCCG model
 plot(grip_sample$age, grip_sample$grip, col="gray90", main="Centile Comparison", xlab="Age", ylab="Grip Strength")
 
-centiles(gbccg, xvar = grip_sample$age, col = "blue", lty = 1)
+centiles(gbccg, xvar = grip_sample$age, col = "blue", lty = 1) #, add = TRUE
 legend("topright", legend=c("BCCG"), col=c("blue"), lty=1, cex=0.8)
 
 # Add centiles for BCT model to the existing plot
@@ -319,8 +304,6 @@ plot(residuals(gbccg), main="Residuals for BCCG Model")
 
 # For BCT Model
 plot(residuals(gbct), main="Residuals for BCT Model")
-
-# Assuming the 'gamlss' package is loaded
 
 # For BCCG Model
 wp(gbccg, main="Worm Plot for BCCG Model")

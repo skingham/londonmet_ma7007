@@ -1,8 +1,21 @@
 ########################################################################
-########################################################################
-setwd('C:\\Users\\stuar\\Projects\\Londonmet\\londonmet_ma7007\\data')
 rm(list=ls())
-cc <- read.csv("UCI_Credit_Card.csv")
+
+# suppress the warnings by setting warn=-1 
+options(warn=-1) 
+# Install if not already installed
+if (!requireNamespace("ggplot2", quietly = TRUE)) install.packages("ggplot2")
+if (!requireNamespace("gamlss", quietly = TRUE)) install.packages("gamlss")
+if (!requireNamespace("gamlss.data", quietly = TRUE)) install.packages("gamlss.data")
+
+# Load the packages
+library(ggplot2)
+library(gamlss)
+library(gamlss.ggplots)
+library(gamlss.add)
+library(gamlss.data)
+
+cc <- read.csv("../data/UCI_Credit_Card.csv")
 ########################################################################
 # Schema of UCI_Credit_Card.csv
 # https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients
@@ -35,10 +48,6 @@ cc <- read.csv("UCI_Credit_Card.csv")
 # Y	        Target	  Binary		                default.payment.next.month		no
 names(cc)
 dim(cc)
-
-cc$SEX <- factor(cc$SEX)
-cc$EDUCATION <- factor(cc$EDUCATION)
-cc$MARRIAGE <- factor(cc$MARRIAGE)
 
 # may be too many for demonstration 
 ########################################################################
@@ -83,14 +92,22 @@ plot(default.payment.next.month~BILL_AMT1, data=cc2)
 plot(default.payment.next.month~sqrt(BILL_AMT1), data=cc2)
 plot(default.payment.next.month~log(BILL_AMT1), data=cc2)
 # I am not sure
-plot(factor(default.payment.next.month)~PAY_0, data=cc2)
+plot(default.payment.next.month~PAY_0, data=cc2)
 plot(default.payment.next.month~log(PAY_0), data=cc2)
 
 # a possible transformation 
-plot(factor(default.payment.next.month)~MARRIAGE, data=cc2)
+#cc$SEX <- factor(cc$SEX)
+plot(default.payment.next.month~factor(SEX), data=cc2)
 
 # if it is not make it a factor
+#cc$EDUCATION <- factor(cc$EDUCATION)
+plot(default.payment.next.month~factor(EDUCATION), data=cc2)
+# if it is not make it a factor
 plot(default.payment.next.month~EDUCATION, data=cc2)
+
+# a possible transformation 
+#cc$MARRIAGE <- factor(cc$MARRIAGE)
+plot(default.payment.next.month~factor(MARRIAGE), data=cc2)
 
 plot(default.payment.next.month~PAY_AMT1, data=cc2)
 

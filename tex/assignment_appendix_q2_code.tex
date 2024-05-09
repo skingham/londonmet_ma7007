@@ -4,20 +4,22 @@
 %
 \documentclass[
 ]{article}
+\title{MA7007 - Statistical Modelling and Forecasting Case Study Report
+2023-2024}
+\author{}
+\date{\vspace{-2.5em}}
+
 \usepackage{amsmath,amssymb}
+\usepackage{lmodern}
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
 \else % if luatex or xetex
-  \usepackage{unicode-math} % this also loads fontspec
+  \usepackage{unicode-math}
   \defaultfontfeatures{Scale=MatchLowercase}
   \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
-\fi
-\usepackage{lmodern}
-\ifPDFTeX\else
-  % xetex/luatex font selection
 \fi
 % Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -36,6 +38,13 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={MA7007 - Statistical Modelling and Forecasting Case Study Report 2023-2024},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
 \usepackage{color}
 \usepackage{fancyvrb}
@@ -48,13 +57,13 @@
 \newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
 \newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
 \newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
 \newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
 \newcommand{\BuiltInTok}[1]{#1}
 \newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
 \newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
 \newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
 \newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
 \newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
 \newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
@@ -62,7 +71,7 @@
 \newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
 \newcommand{\ExtensionTok}[1]{#1}
 \newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
 \newcommand{\ImportTok}[1]{#1}
 \newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
 \newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
@@ -71,7 +80,7 @@
 \newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
 \newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
 \newcommand{\RegionMarkerTok}[1]{#1}
-\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
 \newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
 \newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
 \newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
@@ -97,18 +106,6 @@
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
-\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\urlstyle{same}
-\hypersetup{
-  pdftitle={MA7007 - Statistical Modelling and Forecasting Case Study Report 2023-2024},
-  hidelinks,
-  pdfcreator={LaTeX via pandoc}}
-
-\title{MA7007 - Statistical Modelling and Forecasting Case Study Report
-2023-2024}
-\author{}
-\date{\vspace{-2.5em}}
 
 \begin{document}
 \maketitle
@@ -159,11 +156,11 @@ create centile curves for grip given age.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Install if not already installed}
-\ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\FunctionTok{requireNamespace}\NormalTok{(}\StringTok{"gamlss"}\NormalTok{, }\AttributeTok{quietly =} \ConstantTok{TRUE}\NormalTok{)) }\FunctionTok{install.packages}\NormalTok{(}\StringTok{"gamlss"}\NormalTok{)}
-\ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\FunctionTok{requireNamespace}\NormalTok{(}\StringTok{"gamlss.data"}\NormalTok{, }\AttributeTok{quietly =} \ConstantTok{TRUE}\NormalTok{)) }\FunctionTok{install.packages}\NormalTok{(}\StringTok{"gamlss.data"}\NormalTok{)}
+\CommentTok{\# suppress the warnings by setting warn={-}1 }
+\FunctionTok{options}\NormalTok{(}\AttributeTok{warn=}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{)}
 
 \CommentTok{\# Load the packages}
+\FunctionTok{library}\NormalTok{(ggplot2)}
 \FunctionTok{library}\NormalTok{(gamlss)}
 \end{Highlighting}
 \end{Shaded}
@@ -213,24 +210,12 @@ create centile curves for grip given age.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{library}\NormalTok{(gamlss.data)}
-\FunctionTok{library}\NormalTok{(MASS)}
-\FunctionTok{library}\NormalTok{(gamlss)}
-\FunctionTok{library}\NormalTok{(ggplot2)}
 \FunctionTok{library}\NormalTok{(gamlss.ggplots)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## Warning: package 'gamlss.ggplots' was built under R version 4.3.3
-\end{verbatim}
-
-\begin{verbatim}
 ## Loading required package: gamlss.foreach
-\end{verbatim}
-
-\begin{verbatim}
-## Warning: package 'gamlss.foreach' was built under R version 4.3.3
 \end{verbatim}
 
 \begin{verbatim}
@@ -242,17 +227,59 @@ create centile curves for grip given age.
 \end{verbatim}
 
 \begin{verbatim}
-## Warning: package 'doParallel' was built under R version 4.3.3
+## Loading required package: iterators
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(gamlss.add)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: mgcv
 \end{verbatim}
 
 \begin{verbatim}
-## Loading required package: iterators
+## This is mgcv 1.9-0. For overview type 'help("mgcv-package")'.
 \end{verbatim}
+
+\begin{verbatim}
+## Loading required package: nnet
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'nnet'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:mgcv':
+## 
+##     multinom
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: rpart
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(gamlss.data)}
+\end{Highlighting}
+\end{Shaded}
 
 \hypertarget{a-read-the-data-file-by-typing-datagripinto-r.-note-that-the-gamlss-packages-have-to-be-downloaded-first-i.e.-librarygamlss.}{%
 \subsubsection{(a) Read the data file by typing data(grip)into R. Note
 that the gamlss packages have to be downloaded first
 i.e.~library(gamlss).}\label{a-read-the-data-file-by-typing-datagripinto-r.-note-that-the-gamlss-packages-have-to-be-downloaded-first-i.e.-librarygamlss.}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Load the data}
+\FunctionTok{data}\NormalTok{(}\StringTok{"grip"}\NormalTok{, }\AttributeTok{package =} \StringTok{"gamlss.data"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
 
 \hypertarget{b-in-order-to-select-your-individual-sample-a-unique-seed-number-will-be-given-to-you.-in-the-example-below-we-use-the-seed-number-243-for-demonstration.}{%
 \subsubsection{(b) In order to select your individual sample a unique
@@ -262,9 +289,6 @@ demonstration.)}\label{b-in-order-to-select-your-individual-sample-a-unique-seed
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Load the data}
-\FunctionTok{data}\NormalTok{(}\StringTok{"grip"}\NormalTok{, }\AttributeTok{package =} \StringTok{"gamlss.data"}\NormalTok{)}
-
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{243}\NormalTok{) }
 \NormalTok{index }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(}\DecValTok{3766}\NormalTok{, }\DecValTok{1000}\NormalTok{) }
 \NormalTok{mydata }\OtherTok{\textless{}{-}}\NormalTok{ grip[index, ] }
@@ -329,16 +353,16 @@ Why No Power Transformation is Necessary:
      \AttributeTok{col =} \StringTok{"blue"}\NormalTok{,}
      \AttributeTok{pch =} \DecValTok{19}\NormalTok{)}
 
-\CommentTok{\# Optional: Add a smooth line to highlight the trend}
+\CommentTok{\# Add a smooth line to highlight the trend}
 \FunctionTok{lines}\NormalTok{(}\FunctionTok{smooth.spline}\NormalTok{(grip}\SpecialCharTok{$}\NormalTok{age, grip}\SpecialCharTok{$}\NormalTok{grip), }\AttributeTok{col =} \StringTok{"red"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-3-1.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-4-1.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Plot grip against age}
+\CommentTok{\# Plot sample grip against age}
 \FunctionTok{plot}\NormalTok{(grip\_sample}\SpecialCharTok{$}\NormalTok{age, grip\_sample}\SpecialCharTok{$}\NormalTok{grip,}
      \AttributeTok{xlab =} \StringTok{"Age"}\NormalTok{,}
      \AttributeTok{ylab =} \StringTok{"Grip Strength"}\NormalTok{,}
@@ -346,12 +370,12 @@ Why No Power Transformation is Necessary:
      \AttributeTok{col =} \StringTok{"blue"}\NormalTok{,}
      \AttributeTok{pch =} \DecValTok{19}\NormalTok{)}
 
-\CommentTok{\# Optional: Add a smooth line to highlight the trend}
+\CommentTok{\# Add a smooth line to highlight the trend}
 \FunctionTok{lines}\NormalTok{(}\FunctionTok{smooth.spline}\NormalTok{(grip\_sample}\SpecialCharTok{$}\NormalTok{age, grip\_sample}\SpecialCharTok{$}\NormalTok{grip), }\AttributeTok{col =} \StringTok{"red"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-3-2.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-4-2.pdf}
 
 \hypertarget{d-use-the-lms-method-to-fit-the-data-you-can-simplify-some-of-the-steps-below-by-using-the-gamlss-package-function-lms-but-you-still-have-to-justify-the-choice-of-the-final-model.-that-is-fit-the-bccg-distribution-for-grip.}{%
 \subsubsection{(d) Use the LMS method to fit the data (You can simplify
@@ -377,7 +401,6 @@ complexity. Here are factors to consider in justifying your model
 choice:
 
 \begin{itemize}
-\tightlist
 \item
   Goodness of Fit: Use diagnostic plots and goodness-of-fit statistics
   to ensure the model adequately captures the relationship between grip
@@ -402,6 +425,33 @@ data, which is often encountered in physical measurements like grip
 strength. By adjusting for age with P-splines, the model can flexibly
 accommodate nonlinear age effects on the distribution parameters of grip
 strength, making it a powerful approach for analyzing such data.
+
+4.5 Choosing an appropriate distribution The choice of an appropriate
+response distribution is based on how well the distribution fits the
+data as judged by (i) the generalized Akaike information criterion GAIC,
+(ii) the prediction global deviance VDEV, (iii) the residuals, or (iv)
+other criteria.
+
+4.5.1 Generalized Akaike information criterion (GAIC) The fitted global
+deviance is defined as minus twice the fitted log likelihood (defined in
+Section 10.2): \(GDEV = -2 \sum^{n}_{i=1} log f(yi | j\Theta)\) (4.2)
+
+where \(\Theta = (\mu; \sigma; \nu; \tau )\) are the fitted parameters,
+which for regression models depend on the explanatory variables. The
+generalized Akaike information criterion, GAIC, is defined as
+\(GAIC(\kappa) = GDEV + \kappa . df\) (4.3)
+
+where \(df\) is the effective degrees of fr eedom used for the fitted
+model and \(\kappa\) is a penalty for each degree of freedom used. The
+AIC and BIC/SBC are special cases of the GAIC when \(\kappa = 2\) and
+\(\kappa = log n\), respectively, i.e.
+
+\(AIC = GDEV + 2 df\)
+
+\(SBC = GDEV + log n . df\)
+
+These measures are discussed in Chapter 3 of Stasinopoulos et
+al.~{[}2017{]} and in Section 11.5.5.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -558,6 +608,16 @@ the model's generalizability.
 \NormalTok{edf\_bcpe }\OtherTok{\textless{}{-}} \FunctionTok{edfAll}\NormalTok{(gbcpe)}
 
 \CommentTok{\# Print the EDF for each model}
+\FunctionTok{print}\NormalTok{(}\StringTok{"BCT EDF"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "BCT EDF"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \FunctionTok{print}\NormalTok{(edf\_bct)}
 \end{Highlighting}
 \end{Shaded}
@@ -585,7 +645,44 @@ the model's generalizability.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"BCPE EDF"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "BCPE EDF"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \FunctionTok{print}\NormalTok{(edf\_bcpe)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## $mu
+## $mu$`pb(age)`
+## [1] 4.80843
+## 
+## 
+## $sigma
+## $sigma$`pb(age)`
+## [1] 3.14181
+## 
+## 
+## $nu
+## $nu$`pb(age)`
+## [1] 2.00009
+## 
+## 
+## $tau
+## $tau$`pb(age)`
+## [1] 2.000348
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{edfAll}\NormalTok{(gbcpe)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -661,7 +758,7 @@ predictors.
 \end{Shaded}
 
 \begin{verbatim}
-## [1] "GAIC for BCCG: 6294.91261769977"
+## [1] "GAIC for BCCG: 6294.91261769976"
 \end{verbatim}
 
 \begin{Shaded}
@@ -699,7 +796,7 @@ the BCCG and BCT models respectively.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-7-1.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-9-1.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -738,12 +835,12 @@ the BCCG and BCT models respectively.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-7-2.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-9-2.pdf}
 
-\hypertarget{h-obtain-a-centile-plot-for-the-fitted-models-in-d-and-e-using-centiles-orcentiles.split-and-compare-them.}{%
+\hypertarget{h-obtain-a-centile-plot-for-the-fitted-models-in-d-and-e-using-centiles-or-centiles.split-and-compare-them.}{%
 \subsubsection{(h) Obtain a centile plot for the fitted models in (d)
-and (e) using centiles() orcentiles.split() and compare
-them.}\label{h-obtain-a-centile-plot-for-the-fitted-models-in-d-and-e-using-centiles-orcentiles.split-and-compare-them.}}
+and (e) using centiles() or centiles.split() and compare
+them.}\label{h-obtain-a-centile-plot-for-the-fitted-models-in-d-and-e-using-centiles-or-centiles.split-and-compare-them.}}
 
 Interpreting the Comparison:
 
@@ -769,12 +866,25 @@ the centiles to the observed data.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\#centilesTwo(gbccg, grid.x1 = age, grid.x2 = grip, )}
-\FunctionTok{centiles}\NormalTok{(gbccg, }\AttributeTok{xvar=}\NormalTok{grip\_sample}\SpecialCharTok{$}\NormalTok{age, }\AttributeTok{cent=}\FunctionTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\FloatTok{0.4}\NormalTok{, }\DecValTok{2}\NormalTok{,}\DecValTok{10}\NormalTok{,}\DecValTok{25}\NormalTok{,}\DecValTok{50}\NormalTok{,}\DecValTok{75}\NormalTok{,}\DecValTok{90}\NormalTok{,}\DecValTok{98}\NormalTok{,}\FloatTok{99.6}\NormalTok{, }\FloatTok{99.9}\NormalTok{), }\AttributeTok{ylab=}\StringTok{"grip"}\NormalTok{, }\AttributeTok{xlab=}\StringTok{"age"}\NormalTok{, }\AttributeTok{legend=}\ConstantTok{FALSE}\NormalTok{)}
+\FunctionTok{centilesTwo}\NormalTok{(gbccg, }\DecValTok{10}\SpecialCharTok{:}\DecValTok{16}\NormalTok{, }\FunctionTok{seq}\NormalTok{(}\DecValTok{15}\NormalTok{, }\DecValTok{40}\NormalTok{, }\DecValTok{5}\NormalTok{), age,  grip, }\AttributeTok{cent=}\FloatTok{0.05}\NormalTok{, }\AttributeTok{dist=}\NormalTok{.}\DecValTok{1}\NormalTok{, }\AttributeTok{xlab=}\StringTok{"age"}\NormalTok{, }\AttributeTok{ylab=}\StringTok{\textquotesingle{}grip\textquotesingle{}}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-8-1.pdf}
+\begin{verbatim}
+## new prediction 
+## new prediction 
+## new prediction
+\end{verbatim}
+
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-10-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{centiles}\NormalTok{(gbccg, }\AttributeTok{xvar=}\NormalTok{grip\_sample}\SpecialCharTok{$}\NormalTok{age, }\AttributeTok{cent=}\FunctionTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\FloatTok{0.4}\NormalTok{, }\DecValTok{2}\NormalTok{,}\DecValTok{10}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{50}\NormalTok{,}\DecValTok{75}\NormalTok{,}\DecValTok{90}\NormalTok{,}\DecValTok{98}\NormalTok{,}\FloatTok{99.6}\NormalTok{, }\FloatTok{99.9}\NormalTok{), }\AttributeTok{ylab=}\StringTok{"grip"}\NormalTok{, }\AttributeTok{xlab=}\StringTok{"age"}\NormalTok{, }\AttributeTok{legend=}\ConstantTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-10-2.pdf}
 
 \begin{verbatim}
 ## % of cases below  0.1 centile is  0.3 
@@ -797,11 +907,11 @@ the centiles to the observed data.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-9-1.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-11-1.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{centiles}\NormalTok{(gbccg, }\AttributeTok{xvar =}\NormalTok{ grip\_sample}\SpecialCharTok{$}\NormalTok{age, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{lty =} \DecValTok{1}\NormalTok{)}
+\FunctionTok{centiles}\NormalTok{(gbccg, }\AttributeTok{xvar =}\NormalTok{ grip\_sample}\SpecialCharTok{$}\NormalTok{age, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{lty =} \DecValTok{1}\NormalTok{) }\CommentTok{\#, add = TRUE}
 \end{Highlighting}
 \end{Shaded}
 
@@ -823,7 +933,7 @@ the centiles to the observed data.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-9-2.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-11-2.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -851,7 +961,7 @@ the centiles to the observed data.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-9-3.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-11-3.pdf}
 
 \hypertarget{i-investigate-the-residuals-from-the-fitted-models-in-d-and-e}{%
 \subsubsection{(i) Investigate the residuals from the fitted models in
@@ -893,7 +1003,7 @@ improvement.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-10-1.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-12-1.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -902,23 +1012,16 @@ improvement.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-10-2.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-12-2.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Assuming the \textquotesingle{}gamlss\textquotesingle{} package is loaded}
-
 \CommentTok{\# For BCCG Model}
 \FunctionTok{wp}\NormalTok{(gbccg, }\AttributeTok{main=}\StringTok{"Worm Plot for BCCG Model"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
-## Warning in wp(gbccg, main = "Worm Plot for BCCG Model"): Some points are missed out 
-## increase the y limits using ylim.all
-\end{verbatim}
-
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-10-3.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-12-3.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -927,7 +1030,7 @@ improvement.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-10-4.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-12-4.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -936,12 +1039,7 @@ improvement.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
-## Warning in Q.stats(gbccg): The xvar has been replace by an index 1:n 
-## 
-\end{verbatim}
-
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-10-5.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-12-5.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -951,17 +1049,17 @@ improvement.
 
 \begin{verbatim}
 ##                           Z1           Z2           Z3           Z4
-##    0.5 to  100.5   0.2853203 -0.539279221 -0.901130048 -0.062506720
+##    0.5 to  100.5   0.2853203 -0.539279221 -0.901130048 -0.062506721
 ##  100.5 to  200.5   0.7490694  2.543402307  0.914966311  0.666350041
-##  200.5 to  300.5   0.1167846 -0.648368504  3.049115344  3.497164185
+##  200.5 to  300.5   0.1167846 -0.648368504  3.049115344  3.497164186
 ##  300.5 to  400.5  -0.4343136 -2.284569286 -1.026868574  0.823841198
 ##  400.5 to  500.5  -0.2198399 -2.763364472  1.610106996  1.526017474
-##  500.5 to  600.5   0.4851420 -0.294830372  1.132835910  0.506159292
+##  500.5 to  600.5   0.4851420 -0.294830371  1.132835910  0.506159293
 ##  600.5 to  700.5   1.3256751 -0.346307455  1.029748206  1.501453854
-##  700.5 to  800.5  -1.8050445  1.559110121 -2.247880791  1.608541892
-##  800.5 to  900.5   0.9645853  1.125300951 -1.942720187  2.359490449
-##  900.5 to 1000.5  -1.4746916  0.336865137  0.559320338  1.383083131
-## TOTAL Q stats      9.2492125 24.052997641 26.076874281 28.263612501
+##  700.5 to  800.5  -1.8050445  1.559110120 -2.247880790  1.608541891
+##  800.5 to  900.5   0.9645853  1.125300951 -1.942720186  2.359490449
+##  900.5 to 1000.5  -1.4746916  0.336865137  0.559320339  1.383083131
+## TOTAL Q stats      9.2492125 24.052997641 26.076874280 28.263612502
 ## df for Q stats     5.2684253  7.800611395  7.999887173 10.000000000
 ## p-val for Q stats  0.1142045  0.001964394  0.001018872  0.001637829
 ##                     AgostinoK2    N
@@ -987,12 +1085,7 @@ improvement.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
-## Warning in Q.stats(gbct): The xvar has been replace by an index 1:n 
-## 
-\end{verbatim}
-
-\includegraphics{Assignment-Q2_files/figure-latex/unnamed-chunk-10-6.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-12-6.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]

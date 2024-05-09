@@ -1,8 +1,31 @@
+---
+title: "Example_of_course_work-Part_II"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r cars}
+summary(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r dummy, echo=FALSE}
+print("test")
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure}
 ########################################################################
 ########################################################################
 #setwd('C:\\Users\\stuar\\Projects\\Londonmet\\londonmet_ma7007\\data')
 #getwd()
-rm(list=ls())
+#rm(list=ls())
 
 da <- read.csv("/Users/skingham/Projects/LondonMet/londonmet_ma7007/data/LondonHousePriceDataset.csv")
 # Schema of LondonHousePriceDataset.csv
@@ -30,6 +53,9 @@ da <- read.csv("/Users/skingham/Projects/LondonMet/londonmet_ma7007/data/LondonH
 # pcds
 names(da)
 dim(da)
+```
+
+```{r}
 # may be too many for demonstration 
 ########################################################################
 ########################################################################
@@ -38,17 +64,24 @@ da1 <- da[, 1:10]
 dim(da1)
 names(da1)
 head(da1)
+```
 
+```{r}
 da2  <- da1[, -c(1,2)]
 head(da2)
 names(da2)
 dim(da2)
+```
 
+```{r}
 da3 <- da[, -c(1,2,22)]
 head(da3)
 names(da3)
 dim(da3)
 ########################################################################
+```
+
+```{r}
 ########################################################################
 # exploring you data 
 plot(da2)
@@ -59,12 +92,18 @@ which.Data.Corr(da2, r=0.7)
 library(corrplot)
 cc <- cor(da2)
 corrplot(cc)
+```
+
+```{r}
 ######################################################################## 
 # is any missing
 dim(da2)
 #dim(is.na(da2)) 
 dim(na.omit(da2))
 # no missing 
+```
+
+```{r}
 ####################################################################### 
 # look of outliers
 plot(HPrice~medIncome, data=da2)
@@ -83,6 +122,9 @@ plot(HPrice~Perof65years, data=da2)
 plot(HPrice~drivingTime, data=da2)
 
 plot(HPrice~PTransportTime, data=da)
+```
+
+```{r}
 ##################################################################
 #plot(HPrice~TPopulation, data=da)
 #plot(HPrice~log(TPopulation), data=da)
@@ -98,12 +140,18 @@ plot(HPrice~PTransportTime, data=da)
 # think a possible transformation 
 # plot(HPrice~Cemissions, data=da)
 # plot(HPrice~TTprimaryS, data=da)
+```
+
+```{r}
 ####################################################################### 
 # check for funny values
 # check why the discrete values 
 plot(HPrice~TTsecodS, data=da)
 plot(HPrice~TTGP, data=da)
 ######################################################################
+```
+
+```{r}
 ######################################################################
 # checking simple regression with normal errors 
 library( gamlss)
@@ -139,6 +187,9 @@ resid_wp(mbct1)
 model_wp(mbct1, mga)
 
 #######################################################################
+```
+
+```{r}
 #######################################################################
 # first parametric model 
 mbct0 <- gamlss(HPrice~1,family=BCTo, data=da)
@@ -163,6 +214,9 @@ fitted_pdf(mbct2, obs=c(1000,2000,3000, 4000), from=0, to=1000000 )
 
 
 #######################################################################
+```
+
+```{r}
 #######################################################################
 mbct3 <- stepGAICAll.A(mbct0, scope=list(lower=~1, 
         upper=~medIncome+sqrt(Tquantity)+log(CrimRate)+FareZone+
@@ -197,6 +251,9 @@ fitted_pdf(mbct3, obs=1:100, from=0, to=1000000 )
 GAIC(mbct1, mbct2, mbct3)
 
 #######################################################################
+```
+
+```{r}
 #######################################################################
 # smoothing terms
 mbct4 <- stepGAICAll.A(mbct0, scope=list(lower=~1, 
@@ -220,6 +277,9 @@ GAIC(mbct1, mbct2, mbct3, mbct4)
 #save(mbct2, mbct3, mbct4, mbctnn, mbcttr, file="/Users/...")
 #load("/Users/...")
 #######################################################################
+```
+
+```{r}
 #######################################################################
 library(gamlss.add)
 # neural network 
@@ -241,6 +301,9 @@ resid_wp(mbctnn )
 GAIC(mbct1, mbct2, mbct3, mbct4, mbctnn)
 GAIC(mbct1, mbct2, mbct3, mbct4, mbctnn, k=log(4835))
 #######################################################################
+```
+
+```{r}
 #######################################################################                
 # regression trees
                       
@@ -267,6 +330,9 @@ resid_plots(mbcttr)
 GAIC(mbct1, mbct2, mbct3, mbct4, mbctnn, mbcttr) 
 GAIC(mbct1, mbct2, mbct3, mbct4, mbctnn, mbcttr,  k=log(4835))
 #####################################################################
+```
+
+```{r}
 #####################################################################
 #####################################################################
 #####################################################################
@@ -287,6 +353,9 @@ resid_plots(m2)
 resid_wp(m2)
 summary(m2)
 ######################################################################
+```
+
+```{r}
 ######################################################################
 ######################################################################
 library(gamlss.foreach)
@@ -310,7 +379,9 @@ GAIC(m2, mod1, mod2,mod3,k=log(4884))
 resid_wp(mod2)
 
 model_wp(m2, mod1, mod2)
+```
 
+```{r}
 #--------------------------------------------------------
 #interaction formula
 #
@@ -324,14 +395,15 @@ m22
 
 resid_plots(m22)
 wp(m22)
+```
 
-
+```{r}
 m33 <- gamlss(form2, data=da3, family=BCT)
 resid_plots(m33)
 resid_wp(m33)
+```
 
+```{r}
 GAIC(m2, mod1, mod2,mod3, m33, k=log(4884))
 #########################################################
-
-
-
+```

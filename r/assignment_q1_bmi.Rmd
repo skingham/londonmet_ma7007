@@ -1,0 +1,193 @@
+---
+title: "MA7007 - Statistical Modelling and Forecasting Case Study Report 2023-2024"
+output:
+  pdf_document:
+    keep_tex: true
+---
+
+This document describes the coursework for MA7007. The coursework involves the statistical analysis of real data sets in R and the writing of a report to describe the results. [Note, the emphasis is on the report, which means that producing just computer output it is not enough. The output should be complimented with intelligent comments and explanations].
+
+The coursework consists of the following:
+
+* Each student is given two datasets. 
+
+* Each student is required to find a third dataset, related to their own interest.
+
+* Each student is expected to analyse the first two datasets following the instructions given below.
+
+* For the third dataset the student is required to show their own initiative in analysing the data.
+
+* Each student should write a small report (less than 5000 words) describing how they have done the three analyses and describing their results. Section 2 gives instructions on writing the report.
+
+To address the given task, we'll go through it step by step, writing R code for each part. The task involves analyzing BMI data for Dutch boys aged 10 to 11 years from the `dbbmi` dataset in the `gamlss.data` package, fitting parametric distributions, and selecting an appropriate one based on the analysis.
+
+## Instructions on how to analyse the first data set
+
+The first data set is a subset of Body Mass Index (BMI) data obtained from the Fourth Dutch Growth Study, 
+Fredriks et al. 2000 [1]. The data contains BMI for different ages in years for Dutch boys. Each student 
+will be given a different age, for example, 10 to 11 years old. The aim here is to find a suitable 
+distribution of the BMI at this age.
+
+### (a) The original data, which contains all ages from zero to twenty two, exists in the gamlss.data package under the name of dbbmi. Each student should analyse a different age. Here we give an example how to analyse age 10. We first bring the data set in R and then create a subset data.frame containing only a specific age (here from 10-11). The following commands can be used:
+
+First, let's load the data, subset it for the specific age group, and plot the histogram to find a suitable value for `nbins`.
+
+```{r}
+# suppress the warnings by setting warn=-1 
+options(warn=-1) 
+
+# Load the packages
+library(ggplot2)
+library(gamlss)
+library(gamlss.ggplots)
+library(gamlss.add)
+library(gamlss.data)
+library(MASS)
+
+# Load the dataset
+data(dbbmi)
+summary(dbbmi)
+
+# Subset for ages 15 to 16
+old <- 15
+dbbmi_15 <- with(dbbmi, subset(dbbmi, age > old & age < old + 1))
+bmi15 <- dbbmi_15$bmi
+
+# Plot the histogram; adjust nbins as needed to make the histogram look good
+binwith = 0.5
+nbins = trunc(max(bmi15) - min(bmi15)) / binwith
+
+truehist(bmi15, nbins=nbins)
+
+density(bmi15, cut = 0)
+
+gamlss.ggplots:::y_hist(dbbmi_15$bmi,
+                        from=floor(min(bmi15)), 
+                        to=ceiling(max(bmi15)), 
+                        binwidth=binwith,
+                        title="Histogram of BMI for 15 year olds")
+```
+
+Experiment with the `nbins` parameter to find a visually appealing and informative histogram. The goal is to have enough bins to clearly see the distribution's shape without making it too noisy.
+
+### (b) Fit different parametric distributions to the data and choose an appropriate distribution to the data. Justify the choice of the distribution by explaining what you have done and why you select this specific distribution.
+
+Next, we'll fit several parametric distributions to the data. Common distributions for BMI data include the Normal, Log-Normal, and Gamma distributions, among others. The `gamlss` package provides functions to fit a wide range of distributions.
+
+```{r}
+# m1 is the model with the lowest AIC: list the best 6 fits:
+#m1 <- fitDist(bmi, type=c('realplus'), data=dbbmi_15, k=2)
+#m1$fit[1:6]
+#m1 <- fitDist(bmi, type=c('realline'), data=dbbmi_15, k=2)
+#m1$fit[1:6]
+m1 <- fitDist(bmi, type='realAll', data=dbbmi_15, k=2)
+m1$fit[1:6]
+```
+
+```{r}
+m1 <- histDist(bmi, "exGAUS", density=TRUE, line.col=c(1,1), line.ty=c(1,2), nbins=nbins, data=dbbmi_15)
+plot(m1)
+
+m2 <- histDist(bmi, "BCPEo", density=TRUE, line.col=c(1,1), line.ty=c(1,2), nbins=nbins, data=dbbmi_15)
+plot(m2)
+
+m3 <- histDist(bmi, "BCPE", density=TRUE, line.col=c(1,1), line.ty=c(1,2), nbins=nbins, data=dbbmi_15)
+plot(m3)
+```
+
+```{r}
+m1 <- gamlss(bmi~1, family=NO, data=dbbmi_15)
+c1 <- chooseDist(m1, type='realAll', data=dbbmi_15, parallel="snow", ncpus=4)
+c1
+```
+
+
+#### Best fit is BCCG
+
+```{r}
+# Best fit is BCCG
+m1 <- histDist(bmi, "BCCG", density=TRUE, line.col=c(1,1), line.ty=c(1,2), nbins=nbins, data=dbbmi_15)
+plot(m1)
+
+m2 <- histDist(bmi, "TF", density=TRUE, line.col=c(1,1), line.ty=c(1,2), nbins=nbins, data=dbbmi_15)
+plot(m2)
+
+m3 <- histDist(bmi, "exGAUS", density=TRUE, line.col=c(1,1), line.ty=c(1,2), nbins=nbins, data=dbbmi_15)
+plot(m3)
+```
+
+```{r}
+plot(function(x) dJSU(x, mu=16.8475, sigma=1.7560, nu=2.439, tau=2.6890), 10, 25, main = "The JSU  density mu=16.8475, sigma=0.7560, nu=2.439, tau=0.6890")
+
+#print(dJSU(x, mu=16.8475, sigma=1.7560, nu=2.439, tau=2.742))
+```
+
+
+```{r}
+# Fit different distributions
+fit_bccg <- gamlss(bmi15 ~ 1, family=BCCG)
+fit_jsu <- gamlss(bmi15 ~ 1, family=JSU)
+fit_tf <- gamlss(bmi15 ~ 1, family=TF)
+fit_lognorm <- gamlss(bmi15 ~ 1, family=LOGNO)
+fit_lo <- gamlss(bmi15 ~ 1, family=LO)
+fit_pe <- gamlss(bmi15 ~ 1, family=PE)
+fit_gamma <- gamlss(bmi15 ~ 1, family=GA)
+fit_norm <- gamlss(bmi15 ~ 1, family=NO)
+fit_wei <- gamlss(bmi15 ~ 1, family=WEI)
+fit_gu <- gamlss(bmi15 ~ 1, family=GU)
+fit_exp <- gamlss(bmi15 ~ 1, family=EXP)
+fit_lg <- gamlss(bmi15 ~ 1, family=LG)
+
+```
+
+```{r}
+models <- list(fit_jsu, fit_tf, fit_lognorm, fit_lo, fit_pe, fit_gamma, fit_norm, fit_wei, fit_gu, fit_exp, fit_lg)
+
+# Compare models
+aic_values <- sapply(models, AIC)
+print(aic_values)
+
+# Select the model with the lowest AIC
+selected_model <- models[[which.min(aic_values)]]
+selected_model <- histDist(dbbmi_15$bmi, "JSU", density=TRUE, line.col=c(1,1), line.ty=c(1,2))
+plot(selected_model)
+```
+
+The choice of distribution can be justified by comparing the Akaike Information Criterion (AIC) values of the fitted models—the model with the lowest AIC is typically preferred as it suggests a good fit with relatively lower complexity.
+
+### (c) Output the parameter estimates for your chosen model 
+
+Using the function summary() and interpret the fitted parameters. (You may refer to the GAMLSS distribution book Rigby et al. (2019) [2] (or to its earlier version which can be found in the GAMLSS web-site https://www.gamlss.com) to find what the distribution parameters represent (i.e. location, scale, kurtosis etc.).
+
+Finally, for the chosen model, we can output the parameter estimates and interpret them according to the distribution's characteristics.
+
+```{r}
+# Output parameter estimates for the chosen model
+summary(selected_model)
+print(fit_jsu$mu.coefficients)
+```
+
+Interpretation of the parameters will depend on the selected distribution. For example:
+
+- For a Normal distribution (`NO`), the parameters are the mean (`mu`) and standard deviation (`sigma`), representing the location and scale of the distribution.
+
+- For a Log-Normal distribution (`LOGNO`), `mu` and `sigma` represent the mean and standard deviation of the variable's logarithm, indicating the distribution's central tendency and spread on a log scale.
+
+- For a Gamma distribution (`GA`), the parameters might include a shape and a scale parameter, reflecting the distribution's skewness and scale.
+
+Refer to the GAMLSS book or documentation for specific interpretations of the parameters of your chosen distribution. The interpretation will help in understanding the characteristics of BMI distribution among Dutch boys aged 10 to 11, such as its central tendency, variability, and potential skewness.
+
+```{r}
+# Function to calculate the fitted density
+density_fitted <- function(x) {
+  dJSU(x, mu=fit_jsu$mu.coefficients, sigma=fit_jsu$sigma.coefficients, nu=fit_jsu$nu.coefficients, tau=fit_jsu$tau.coefficients)
+}
+
+# Histogram with ggplot
+p <- ggplot(dbbmi_15, aes(x=bmi15)) +
+  geom_histogram(aes(y=..density..), binwidth = 0.5, colour="black", fill="white") 
+
+# Add the fitted model curve
+p <- p + stat_function(fun=density_fitted, colour="red", linewidth=1)
+p
+```
