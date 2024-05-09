@@ -285,6 +285,13 @@ mbi_7 <- gamlss(default.payment.next.month~LIMIT_BAL+
               data=cc)
 wp(mbi_7)
 
+mbi_8 <- gamlss(default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_5+AGE+
+                factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+
+                BILL_AMT3+PAY_AMT3+PAY_AMT4+PAY_AMT5+PAY_AMT6, 
+              family=BI, # BI is for Binomial distribution
+              data=cc)
+wp(mbi_8)
+
 mbi <- gamlss(default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+AGE+
                 factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+
                 BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6, 
@@ -295,7 +302,7 @@ resid_plots(mbi)
 plot(mbi)
 wp(mbi)
 
-GAIC(mbi, mbi_1, mbi_2, mbi_3, mbi_4, mbi_5, mbi_6, mbi_7)
+GAIC(mbi, mbi_1, mbi_2, mbi_3, mbi_4, mbi_5, mbi_6, mbi_7, mbi_8)
 ```
 
 ```{r}
