@@ -5,16 +5,14 @@ output:
     keep_tex: true
 ---
 
-## Instructions on how to analyse the second data set
 
-Cohen et al. (2010) [3] analysed the handgrip (HG) strength in relation to gender and age in English schoolchildren. Here each student is required to analyse a different sample of 1000 from the original 3766 English boys. The data are stored in the packages gamlss.data under the name grip and contain the variables grip and age. The aim here is to create centile curves for grip given age.
-
-
-
-```{r}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 # suppress the warnings by setting warn=-1 
 options(warn=-1)
+```
 
+```{r}
 # Load the packages
 library(ggplot2)
 library(gamlss)
@@ -23,20 +21,17 @@ library(gamlss.add)
 library(gamlss.data)
 ```
 
-### (a) Read the data file by typing data(grip)into R. Note that the gamlss packages have to be downloaded first i.e. library(gamlss).
+Read the data file.
 
 ```{r}
 # Load the data
 data("grip", package = "gamlss.data")
 ```
 
-### (b) In order to select your individual sample a unique seed number will be given to you. (In the example below we use the seed number 243 for demonstration.)
+Set unique seed number, and select 1000 random rows.
 
 ```{r}
-set.seed(243) 
-index <- sample(3766, 1000) 
-mydata <- grip[index, ] 
-dim(mydata)
+set.seed(567) 
 
 # Sample 1000 observations
 index <- sample(nrow(grip), 1000)
@@ -44,18 +39,7 @@ grip_sample <- grip[index, ]
 dim(grip_sample)
 ```
 
-### (c) Plot grip against age.  Note that there is no need to power transform the age in this data set. Explain why.
-
-Why No Power Transformation is Necessary:
-
-*    Linearity: If the relationship between age and grip strength is linear or close to linear, applying a transformation to age would not yield any significant benefits in terms of linear regression modeling or interpretation.
-    
-*    Variability: Power transformations are also used to stabilize variance across the range of predictor variables. If the variance of grip strength is relatively constant across ages, then transforming age wouldn't help in stabilizing variance.
-    
-*    Normality of Residuals: Another reason for transformations could be to achieve normality of residuals in regression modeling. If the residuals from a model with age predicting grip strength are already approximately normally distributed, a transformation is unnecessary.
-    
-*    Simplicity: Avoiding unnecessary transformations keeps the model simpler and makes interpretation more straightforward. If a simple model without transformation provides satisfactory results, it's often preferred for ease of explanation and understanding.
-
+Plot grip against age. 
     
 ```{r}
 # Plot grip against age
@@ -81,49 +65,7 @@ plot(grip_sample$age, grip_sample$grip,
 lines(smooth.spline(grip_sample$age, grip_sample$grip), col = "red")
 ```
 
-### (d) Use the LMS method to fit the data (You can simplify some of the steps below by using the gamlss package function lms() but you still have to justify the choice of the final model.)  That is, fit the BCCG distribution for grip.
-
-gbccg <- gamlss(grip ~pb(age), sigma.fo=~pb(age), nu.fo=~pb(age), data=da, family=BCCG)
-
-where the smoothing for age uses the P-splines function pb(), i.e. pb(age), for the predictors for parameter $\mu$, $\sigma$ and $\nu$.
-
-How many degrees of freedom were used for smoothing in the model? Use the function edf()or edfAll().
-
-When selecting the final model, especially after using smoothing techniques like P-splines (pb()), it's crucial to balance fit and complexity. Here are factors to consider in justifying your model choice:
-
-*    Goodness of Fit: Use diagnostic plots and goodness-of-fit statistics to ensure the model adequately captures the relationship between grip strength and age.
-
-*    Complexity vs. Simplicity: A model with more degrees of freedom can capture more complex relationships but risks overfitting. Ensure the EDF values suggest a model complex enough to capture essential patterns without overfitting.
-
-*    Comparison with Alternative Models: If applicable, compare your chosen model with alternatives using information criteria like AIC or BIC, which penalize model complexity.
-
-*    Interpretability: Ensure the model remains interpretable. While more complex models might provide a marginally better fit, they should not do so at the expense of being understandable.
-
-The BCCG distribution is chosen for its flexibility in modeling skewed data, which is often encountered in physical measurements like grip strength. By adjusting for age with P-splines, the model can flexibly accommodate nonlinear age effects on the distribution parameters of grip strength, making it a powerful approach for analyzing such data.
-
-4.5 Choosing an appropriate distribution
-The choice of an appropriate response distribution is based on how well the distribution
-fits the data as judged by (i) the generalized Akaike information criterion GAIC, (ii)
-the prediction global deviance VDEV, (iii) the residuals, or (iv) other criteria.
-
-4.5.1 Generalized Akaike information criterion (GAIC)
-The fitted global deviance is defined as minus twice the fitted log likelihood (defined in Section 10.2):
-$GDEV = -2 \sum^{n}_{i=1} log f(yi | j\Theta)$ (4.2)
-
-where $\Theta = (\mu; \sigma; \nu; \tau )$ are the fitted parameters, which for regression models depend
-on the explanatory variables. The generalized Akaike information criterion, GAIC, is
-defined as $GAIC(\kappa) = GDEV + \kappa . df$ (4.3)
-
-where $df$ is the effective degrees of fr
-eedom used for the fitted model and $\kappa$ is a penalty
-for each degree of freedom used. The AIC and BIC/SBC are special cases of the GAIC
-when $\kappa = 2$ and $\kappa = log n$, respectively, i.e.
-
-$AIC = GDEV + 2 df$
-
-$SBC = GDEV + log n . df$
-
-These measures are discussed in Chapter 3 of Stasinopoulos et al. [2017] and in Section 11.5.5.
+Use the LMS method to fit the data.
 
 ```{r}
 # Fit the model
@@ -140,28 +82,7 @@ edf_details <- edfAll(gbccg)
 print(edf_details)
 ```
 
-### (e) Use the fitted values from the LMS model in (d) as starting values for fitting the BCT and the BCPE distributions to the data
-
-e.g. `gbct <- gamlss(grip~pb(age), sigma.fo = ~pb(age), nu.fo = ~pb(age), tau.fo = ~pb(age), data=da, family=BCT, start.from=gbccg)`
-
-What are the effective degrees of freedom fitted for the parameters? Try to interpret the effective degrees of freedom.
-
-Interpreting the Effective Degrees of Freedom:
-
-*    EDF Near 1: If the effective degrees of freedom for a parameter is close to 1, it suggests that the model is applying very little smoothing to that parameter. This can imply a linear relationship between the parameter and the predictors.
-
-*    EDF Greater Than 1: An EDF significantly greater than 1 indicates more complex relationships are being modeled, with the splines applying more smoothing. This is often necessary when the relationship between the response and predictors is nonlinear or when there's a varying effect of predictors across the range of the data.
-
-*    High EDF: Very high EDF values may signal overfitting, where the model is too closely fitting the idiosyncrasies of the sample data rather than capturing the underlying population trends.
-
-The mu, sigma, nu, and tau parameters represent different aspects of the distribution being modeled:
-
-*   mu ($\mu$): The location parameter (central tendency).
-*   sigma ($\sigma$): The scale parameter (dispersion or variability).
-*   nu ($\nu$) and 
-*   tau ($\tau$): Parameters that control the shape of the distribution, including skewness and kurtosis.
-
-Choosing between the BCT and BCPE models, and interpreting their parameters' EDFs, depends on the fit quality, predictive performance, and the complexity trade-off. This process is crucial for understanding how age influences grip strength across its distribution and ensuring the model's generalizability.
+Use the fitted values from the LMS model as starting values for fitting the BCT and the BCPE distributions to the data
 
 ```{r}
 # Fit the BCT model using gbccg as starting values
@@ -181,7 +102,11 @@ gbcpe <- gamlss(grip ~ pb(age),
                 data = grip_sample,
                 family = BCPE,
                 start.from = gbccg)
+```
 
+Effective degrees of freedom fitted for the parameters.
+
+```{r}
 # The EDF indicates the complexity of the model related to each parameter.
 
 # Extract EDF for BCT model
@@ -201,20 +126,7 @@ print(edf_bcpe)
 edfAll(gbcpe)
 ```
 
-### (f) Use the generalised Akaike information criterion, GAIC, to compare the three models.
-
-The GAIC is a variant of the Akaike Information Criterion (AIC) that allows for a more flexible penalization of model complexity and is particularly useful in comparing models fitted with the same dataset but different distributions or complexities.
-
-Interpreting GAIC
-
-When comparing models with GAIC, the model with the lowest GAIC value is generally considered the best among the set, as it strikes the most favorable balance between model fit and complexity. The GAIC penalizes models more heavily for additional parameters than the traditional AIC does, making it particularly useful for models that might overfit the data with too many parameters or excessive flexibility.
-
-*    Lower GAIC: Indicates a model that has a better trade-off between goodness-of-fit and complexity, suggesting it might generalize better to new data.
-
-*    Comparing Values: The absolute value of the GAIC is not interpretable on its own; it's the relative differences between the GAIC scores of the models that inform model selection. A difference of more than a few points is generally considered meaningful.
-
-By evaluating the GAIC values for your three models, you can make an informed decision about which model provides the best fit to your data without unnecessarily increasing model complexity. This is particularly useful in your case, where you're fitting different distributions and considering different forms of the response variable's relationship with predictors.
-
+GAIC to compare the three models.
 
 ```{r}
 # Calculate GAIC for each model
@@ -228,10 +140,7 @@ print(paste("GAIC for BCT:", gaic_gbct))
 print(paste("GAIC for BCPE:", gaic_gbcpe))
 ```
 
-
-### (g) Plot the fitted parameters for the fitted models in (d) and (e) using for example
-
-`fitted.plot(gbccg, gbct, x=da$age)`  where gbccg and gbct are the BCCG and BCT models respectively.
+Plot the fitted parameters for the fitted models in (d) and (e) using for example
 
 ```{r}
 # Assuming 'grip_sample' is your dataset and 'gbccg' and 'gbct' are fitted models
@@ -255,15 +164,7 @@ lines(age_seq, fitted_gbct, col='red')
 legend("topright", legend=c("BCCG", "BCT"), col=c("blue", "red"), lty=1, cex=0.8)
 ```
 
-### (h) Obtain a centile plot for the fitted models in (d) and (e) using centiles() or centiles.split() and compare them.
-
-Interpreting the Comparison:
-
-*    Overlap and Divergence: Overlapping lines suggest agreement between models in estimating grip strength across age centiles. Divergence indicates differences in how models estimate grip strength at various ages, potentially due to differences in distributional assumptions or how well each model captures the variability in the data.
-
-*    Model Fit and Data Representation: This visual comparison can help assess which model might provide a better fit or more accurately represent the underlying trends and variations in your data. For example, if one model's centiles follow the data more closely or seem to capture the trend without overfitting, it might be preferable.
-
-By comparing these centile plots, you get a visual representation of how each model performs across the range of ages, which can inform your decision on the best model for your analysis based on how well they fit the centiles to the observed data.
+Centile plot for the fitted models.
 
 ```{r}
 centilesTwo(gbccg, 10:16, seq(15, 40, 5), age,  grip, cent=0.05, dist=.1, xlab="age", ylab='grip')
@@ -278,25 +179,12 @@ centiles(gbccg, xvar = grip_sample$age, col = "blue", lty = 1) #, add = TRUE
 legend("topright", legend=c("BCCG"), col=c("blue"), lty=1, cex=0.8)
 
 # Add centiles for BCT model to the existing plot
-centiles(gbct, xvar = grip_sample$age, col = "red", lty = 2)
+centiles(gbct, xvar = grip_sample$age, col = "blue", lty = 2)
 # Update the legend to include BCT
-legend("topright", legend=c("BCCG", "BCT"), col=c("blue", "red"), lty=1:2, cex=0.8)
-
+legend("topright", legend=c("BCT"), col=c("blue"), lty=1:2, cex=0.8)
 ```
 
-### (i) Investigate the residuals from the fitted models in (d) and (e) 
-
-using e.g. plot(), wp() (worm plot) and Q.stats()(Q-statistics).
-
-#### Interpreting Diagnostic Plots and Statistics:
-
-*    Residual Plots: You're looking for patterns or systematic deviations from zero. Ideally, residuals should be randomly distributed around zero without clear patterns.
-
-*    Worm Plots (WP): These plots should ideally resemble a straight line. Curvature or deviations from the line indicate potential issues with the model's fit to the data, such as non-normality or heteroscedasticity.
-
-*    Q-Statistics (Q.stats()): This provides a summary of the quantiles of the residuals compared to the expected distribution. Significant deviations can indicate that the model's assumptions about the distribution of residuals may not hold.
-
-When using these diagnostic tools, it's important to consider them collectively rather than relying on a single method. Each tool can highlight different aspects of the model fit and potential areas for improvement.
+Residuals from the fitted models:
 
 ```{r}
 # For BCCG Model
@@ -319,6 +207,3 @@ print(qstats_bccg)
 qstats_bct <- Q.stats(gbct)
 print(qstats_bct)
 ```
-
-### (j)  Choose between the models and give a reason for your choice.
-

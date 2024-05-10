@@ -16,6 +16,7 @@
 \graphicspath{ {tex/figures/} }
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
 \usepackage{parskip}
+\usepackage{float}
 %\usepackage{lipsum}
 \usepackage{setspace}
 \doublespacing
@@ -62,7 +63,7 @@
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
 \urlstyle{same} % disable monospaced font for URLs
-\usepackage[margin=1in]{geometry}
+% \usepackage[margin=1in]{geometry}
 \usepackage{color}
 \usepackage{fancyvrb}
 \newcommand{\VerbBar}{|}
@@ -242,13 +243,19 @@
 
 \input{assignment_introduction}
 
+\pagebreak
+
 \input{assignment_first_data_set}
+
+\pagebreak
 
 \input{assignment_second_data_set}
 
+\pagebreak
+
 \input{assignment_third_data_set}
 
-\input{assignment_peer_review}
+%\input{assignment_peer_review}
 
 \pagebreak
 
@@ -261,10 +268,29 @@
 \pagebreak
 
 \appendix
+\singlespacing
+
+\section{Appendix A: R Code for Question 1}
+
+To address the given task, we’ll go through it step by step, writing R code for each part. The task involves analyzing
+BMI data for Dutch boys aged 15 to 16 years from the \texttt{dbbmi} dataset in the \texttt{gamlss.data} package, fitting
+parametric distributions, and selecting an appropriate one based on the analysis.
+
+First, let's load the data, subset it for the specific age group, and
+plot the histogram to find a suitable value for \texttt{nbins}.
 
 \input{assignment_appendix_q1_code}                   
 
+\section{Appendix B: R Code for Question 3}
+
+Analyse a different sample of 1000 from the original 3766
+English boys. The data are stored in the packages \texttt{gamlss.data} under the
+name grip and contain the variables grip and age. The aim here is to
+create centile curves for grip given age.
+
 \input{assignment_appendix_q2_code}                   
+
+\section{Appendix C: R Code for Question 3}
 
 %\input{assignment_appendix_q3_code}                   
 
