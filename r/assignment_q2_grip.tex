@@ -309,28 +309,9 @@ Use the LMS method to fit the data.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Extract Effective Degrees of Freedom}
-\NormalTok{edf\_details }\OtherTok{\textless{}{-}} \FunctionTok{edfAll}\NormalTok{(gbccg)}
-
-\CommentTok{\# Print the EDF for each parameter}
-\FunctionTok{print}\NormalTok{(edf\_details)}
+\NormalTok{edf\_gbccg }\OtherTok{\textless{}{-}} \FunctionTok{edfAll}\NormalTok{(gbccg)}
 \end{Highlighting}
 \end{Shaded}
-
-\begin{verbatim}
-## $mu
-## $mu$`pb(age)`
-## [1] 4.713324
-## 
-## 
-## $sigma
-## $sigma$`pb(age)`
-## [1] 3.319469
-## 
-## 
-## $nu
-## $nu$`pb(age)`
-## [1] 2.000121
-\end{verbatim}
 
 Use the fitted values from the LMS model as starting values for fitting
 the BCT and the BCPE distributions to the data
@@ -394,6 +375,38 @@ Effective degrees of freedom fitted for the parameters.
 \NormalTok{edf\_bcpe }\OtherTok{\textless{}{-}} \FunctionTok{edfAll}\NormalTok{(gbcpe)}
 
 \CommentTok{\# Print the EDF for each model}
+\FunctionTok{print}\NormalTok{(}\StringTok{"BCCG EDF"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "BCCG EDF"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(edf\_gbccg)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## $mu
+## $mu$`pb(age)`
+## [1] 4.713324
+## 
+## 
+## $sigma
+## $sigma$`pb(age)`
+## [1] 3.319469
+## 
+## 
+## $nu
+## $nu$`pb(age)`
+## [1] 2.000121
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \FunctionTok{print}\NormalTok{(}\StringTok{"BCT EDF"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -531,12 +544,11 @@ GAIC to compare the three models.
 ## [1] "GAIC for BCPE: 6265.44681092804"
 \end{verbatim}
 
-Plot the fitted parameters for the fitted models in (d) and (e) using
-for example
+Plot the fitted parameters for the fitted models
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Assuming \textquotesingle{}grip\_sample\textquotesingle{} is your dataset and \textquotesingle{}gbccg\textquotesingle{} and \textquotesingle{}gbct\textquotesingle{} are fitted models}
+\CommentTok{\# \textquotesingle{}gbccg\textquotesingle{} and \textquotesingle{}gbct\textquotesingle{} are fitted models}
 \FunctionTok{fittedPlot}\NormalTok{(gbccg, gbct, }\AttributeTok{x=}\NormalTok{grip\_sample}\SpecialCharTok{$}\NormalTok{age)}
 \end{Highlighting}
 \end{Shaded}
@@ -600,7 +612,7 @@ Centile plot for the fitted models.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{centiles}\NormalTok{(gbccg, }\AttributeTok{xvar=}\NormalTok{grip\_sample}\SpecialCharTok{$}\NormalTok{age, }\AttributeTok{cent=}\FunctionTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\FloatTok{0.4}\NormalTok{, }\DecValTok{2}\NormalTok{,}\DecValTok{10}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{50}\NormalTok{,}\DecValTok{75}\NormalTok{,}\DecValTok{90}\NormalTok{,}\DecValTok{98}\NormalTok{,}\FloatTok{99.6}\NormalTok{, }\FloatTok{99.9}\NormalTok{), }\AttributeTok{ylab=}\StringTok{"grip"}\NormalTok{, }\AttributeTok{xlab=}\StringTok{"age"}\NormalTok{, }\AttributeTok{legend=}\ConstantTok{FALSE}\NormalTok{)}
+\FunctionTok{centiles}\NormalTok{(gbccg, }\AttributeTok{xvar=}\NormalTok{grip\_sample}\SpecialCharTok{$}\NormalTok{age, }\AttributeTok{col=}\StringTok{"blue"}\NormalTok{, }\AttributeTok{lty =} \DecValTok{3}\NormalTok{, }\AttributeTok{cent=}\FunctionTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\FloatTok{0.4}\NormalTok{, }\DecValTok{2}\NormalTok{,}\DecValTok{10}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{50}\NormalTok{,}\DecValTok{75}\NormalTok{,}\DecValTok{90}\NormalTok{,}\DecValTok{98}\NormalTok{,}\FloatTok{99.6}\NormalTok{, }\FloatTok{99.9}\NormalTok{), }\AttributeTok{ylab=}\StringTok{"grip"}\NormalTok{, }\AttributeTok{xlab=}\StringTok{"age"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -631,38 +643,15 @@ Centile plot for the fitted models.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{centiles}\NormalTok{(gbccg, }\AttributeTok{xvar =}\NormalTok{ grip\_sample}\SpecialCharTok{$}\NormalTok{age, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{lty =} \DecValTok{1}\NormalTok{) }\CommentTok{\#, add = TRUE}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## % of cases below  0.4 centile is  0.7 
-## % of cases below  2 centile is  2.3 
-## % of cases below  10 centile is  8.7 
-## % of cases below  25 centile is  24.8 
-## % of cases below  50 centile is  49.9 
-## % of cases below  75 centile is  75 
-## % of cases below  90 centile is  91.2 
-## % of cases below  98 centile is  97.9 
-## % of cases below  99.6 centile is  99.1
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\FunctionTok{legend}\NormalTok{(}\StringTok{"topright"}\NormalTok{, }\AttributeTok{legend=}\FunctionTok{c}\NormalTok{(}\StringTok{"BCCG"}\NormalTok{), }\AttributeTok{col=}\FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{), }\AttributeTok{lty=}\DecValTok{1}\NormalTok{, }\AttributeTok{cex=}\FloatTok{0.8}\NormalTok{)}
+\CommentTok{\# Add centiles for BCT model to the existing plot}
+\FunctionTok{centiles}\NormalTok{(gbct, }\AttributeTok{xvar =}\NormalTok{ grip\_sample}\SpecialCharTok{$}\NormalTok{age, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{lty =} \DecValTok{2}\NormalTok{, }\AttributeTok{cent=}\FunctionTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\FloatTok{0.4}\NormalTok{, }\DecValTok{2}\NormalTok{,}\DecValTok{10}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{50}\NormalTok{,}\DecValTok{75}\NormalTok{,}\DecValTok{90}\NormalTok{,}\DecValTok{98}\NormalTok{,}\FloatTok{99.6}\NormalTok{, }\FloatTok{99.9}\NormalTok{), }\AttributeTok{ylab=}\StringTok{"grip"}\NormalTok{, }\AttributeTok{xlab=}\StringTok{"age"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-12-2.pdf}
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Add centiles for BCT model to the existing plot}
-\FunctionTok{centiles}\NormalTok{(gbct, }\AttributeTok{xvar =}\NormalTok{ grip\_sample}\SpecialCharTok{$}\NormalTok{age, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{lty =} \DecValTok{2}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
 \begin{verbatim}
+## % of cases below  0.1 centile is  0.1 
 ## % of cases below  0.4 centile is  0.5 
 ## % of cases below  2 centile is  2.3 
 ## % of cases below  10 centile is  9.3 
@@ -671,17 +660,40 @@ Centile plot for the fitted models.
 ## % of cases below  75 centile is  74.4 
 ## % of cases below  90 centile is  90.4 
 ## % of cases below  98 centile is  98 
-## % of cases below  99.6 centile is  99.6
+## % of cases below  99.6 centile is  99.6 
+## % of cases below  99.9 centile is  99.8
 \end{verbatim}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Update the legend to include BCT}
-\FunctionTok{legend}\NormalTok{(}\StringTok{"topright"}\NormalTok{, }\AttributeTok{legend=}\FunctionTok{c}\NormalTok{(}\StringTok{"BCT"}\NormalTok{), }\AttributeTok{col=}\FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{), }\AttributeTok{lty=}\DecValTok{1}\SpecialCharTok{:}\DecValTok{2}\NormalTok{, }\AttributeTok{cex=}\FloatTok{0.8}\NormalTok{)}
+\FunctionTok{centiles}\NormalTok{(gbcpe, }\AttributeTok{xvar =}\NormalTok{ grip\_sample}\SpecialCharTok{$}\NormalTok{age, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{lty =} \DecValTok{1}\NormalTok{, }\AttributeTok{cent=}\FunctionTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\FloatTok{0.4}\NormalTok{, }\DecValTok{2}\NormalTok{,}\DecValTok{10}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{50}\NormalTok{,}\DecValTok{75}\NormalTok{,}\DecValTok{90}\NormalTok{,}\DecValTok{98}\NormalTok{,}\FloatTok{99.6}\NormalTok{, }\FloatTok{99.9}\NormalTok{), }\AttributeTok{ylab=}\StringTok{"grip"}\NormalTok{, }\AttributeTok{xlab=}\StringTok{"age"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-12-3.pdf}
+
+\begin{verbatim}
+## % of cases below  0.1 centile is  0.1 
+## % of cases below  0.4 centile is  0.6 
+## % of cases below  2 centile is  2.2 
+## % of cases below  10 centile is  9 
+## % of cases below  25 centile is  25.6 
+## % of cases below  50 centile is  49.8 
+## % of cases below  75 centile is  74.3 
+## % of cases below  90 centile is  90.7 
+## % of cases below  98 centile is  98.1 
+## % of cases below  99.6 centile is  99.5 
+## % of cases below  99.9 centile is  99.7
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#legend("topright", legend=c("BCCG"), col=c("blue"), lty=1, cex=0.8)}
+
+\CommentTok{\# Update the legend to include BCT}
+\CommentTok{\#legend("topright", legend=c("BCCG"), col=c("blue"), lty=1:2, cex=0.8)}
+\end{Highlighting}
+\end{Shaded}
 
 Residuals from the fitted models:
 
@@ -723,12 +735,21 @@ Residuals from the fitted models:
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# For BCPE Model}
+\FunctionTok{wp}\NormalTok{(gbcpe, }\AttributeTok{main=}\StringTok{"Worm Plot for BCPE Model"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-13-5.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \CommentTok{\# For BCCG Model}
 \NormalTok{qstats\_bccg }\OtherTok{\textless{}{-}} \FunctionTok{Q.stats}\NormalTok{(gbccg)}
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-13-5.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-13-6.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -774,7 +795,7 @@ Residuals from the fitted models:
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-13-6.pdf}
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-13-7.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -797,6 +818,52 @@ Residuals from the fitted models:
 ## TOTAL Q stats     11.868137464 14.69541676  6.7807399 16.47477665 23.25551652
 ## df for Q stats     5.266329280  7.77764748  7.9998764  7.99998585 15.99986227
 ## p-val for Q stats  0.043121921  0.05898312  0.5604506  0.03606707  0.10706852
+##                      N
+##    0.5 to  100.5   100
+##  100.5 to  200.5   100
+##  200.5 to  300.5   100
+##  300.5 to  400.5   100
+##  400.5 to  500.5   100
+##  500.5 to  600.5   100
+##  600.5 to  700.5   100
+##  700.5 to  800.5   100
+##  800.5 to  900.5   100
+##  900.5 to 1000.5   100
+## TOTAL Q stats     1000
+## df for Q stats       0
+## p-val for Q stats    0
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# For BCPE Model}
+\NormalTok{qstats\_bcpe }\OtherTok{\textless{}{-}} \FunctionTok{Q.stats}\NormalTok{(gbcpe)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{assignment_q2_grip_files/figure-latex/unnamed-chunk-13-8.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(qstats\_bcpe)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                              Z1          Z2          Z3          Z4  AgostinoK2
+##    0.5 to  100.5  -0.2076165280  1.79549548 -1.74717054  0.28417899  3.13336258
+##  100.5 to  200.5   2.4413036875  0.42720896 -0.97258731 -3.22067026 11.31864300
+##  200.5 to  300.5   0.8360026267 -1.07355106  0.75752981  0.64999646  0.99634680
+##  300.5 to  400.5   0.1897996768 -1.41809611  1.55669650  2.40094078  8.18782063
+##  400.5 to  500.5  -1.5194876588 -2.06491214  0.01840007  0.28333747  0.08061869
+##  500.5 to  600.5   0.0008666567 -0.04259841  0.34741633  0.39960296  0.28038063
+##  600.5 to  700.5   0.4731497287  1.21316309 -0.11736924  0.14047244  0.03350804
+##  700.5 to  800.5  -0.9122907238  0.47061393  0.94111416  0.74302772  1.43778605
+##  800.5 to  900.5  -1.3411558367  0.79612461  0.30569504  0.36287822  0.22513006
+##  900.5 to 1000.5  -0.0262868019 -1.17113674  0.06714718 -0.50253769  0.25705287
+## TOTAL Q stats     11.9023711277 14.53411457  8.11415263 17.83649674 25.95064936
+## df for Q stats     5.2729887486  7.82497824  7.99989176  7.99968292 15.99957467
+## p-val for Q stats  0.0427286759  0.06359555  0.42238866  0.02248246  0.05471882
 ##                      N
 ##    0.5 to  100.5   100
 ##  100.5 to  200.5   100

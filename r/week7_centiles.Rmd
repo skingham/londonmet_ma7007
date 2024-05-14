@@ -81,7 +81,7 @@ centiles.fan(t2, xvar=db$age)
 # centiles.com()
 centiles.com(t1,t2,t3, xvar=db$age)
 
-add# centiles.spli()
+# centiles.spli()
 centiles.split(t2, xvar=age, xcut.points = c(2, 5))
 ```
 

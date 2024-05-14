@@ -162,7 +162,8 @@ mno <- gamlss(HPrice~medIncome+sqrt(Tquantity)+log(CrimRate)+FareZone+
 library(gamlss.ggplots)
 resid_plots(mno)
 
-plot(mno)
+##### Error in plot.window(...) : need finite 'ylim' values
+# plot(mno)
 # too many observations in the top 
 # we may need a positive real line distribution
 # The gamma distribution
@@ -171,7 +172,9 @@ mga <- gamlss(HPrice~medIncome+sqrt(Tquantity)+log(CrimRate)+FareZone+
              family=GA, data=da)
 GAIC(mno, mga)
 resid_plots(mga)
-wp(mga)
+
+#### Error in lm.fit(x, y, offset = offset, singular.ok = singular.ok, ...) :  NA/NaN/Inf in 'y'
+# wp(mga)
 # still too many extreme values use chooseDist
 
 T1 <- chooseDist(mga, type="realplus", parallel="snow", ncpuss=8)
@@ -265,7 +268,7 @@ mbct4
 fitted_terms(mbct3, partial=T)
 fitted_terms(mbct4, partial=T)
 fitted_terms(mbct4,"sigma",  partial=T)
-fitted_terms(mbct4,"nu", partial=T)
+# fitted_terms(mbct4,"nu", partial=T)
 fitted_terms(mbct4,"tau", partial=T)
 
 resid_plot(mbct3)

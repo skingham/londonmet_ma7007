@@ -76,10 +76,7 @@ gbccg <- gamlss(grip ~ pb(age),
                 family = BCCG)
 
 # Extract Effective Degrees of Freedom
-edf_details <- edfAll(gbccg)
-
-# Print the EDF for each parameter
-print(edf_details)
+edf_gbccg <- edfAll(gbccg)
 ```
 
 Use the fitted values from the LMS model as starting values for fitting the BCT and the BCPE distributions to the data
@@ -116,6 +113,8 @@ edf_bct <- edfAll(gbct)
 edf_bcpe <- edfAll(gbcpe)
 
 # Print the EDF for each model
+print("BCCG EDF")
+print(edf_gbccg)
 print("BCT EDF")
 print(edf_bct)
 print("BCPE EDF")
@@ -140,10 +139,10 @@ print(paste("GAIC for BCT:", gaic_gbct))
 print(paste("GAIC for BCPE:", gaic_gbcpe))
 ```
 
-Plot the fitted parameters for the fitted models in (d) and (e) using for example
+Plot the fitted parameters for the fitted models
 
 ```{r}
-# Assuming 'grip_sample' is your dataset and 'gbccg' and 'gbct' are fitted models
+# 'gbccg' and 'gbct' are fitted models
 fittedPlot(gbccg, gbct, x=grip_sample$age)
 
 # Calculate fitted values or centiles for each model across a range of ages
@@ -168,20 +167,21 @@ Centile plot for the fitted models.
 
 ```{r}
 centilesTwo(gbccg, 10:16, seq(15, 40, 5), age,  grip, cent=0.05, dist=.1, xlab="age", ylab='grip')
-centiles(gbccg, xvar=grip_sample$age, cent=c(0.1, 0.4, 2,10, 25, 50,75,90,98,99.6, 99.9), ylab="grip", xlab="age", legend=FALSE)
+centiles(gbccg, xvar=grip_sample$age, col="blue", lty = 3, cent=c(0.1, 0.4, 2,10, 25, 50,75,90,98,99.6, 99.9), ylab="grip", xlab="age")
 ```
 
 ```{r}
 # Plot centiles for BCCG model
 plot(grip_sample$age, grip_sample$grip, col="gray90", main="Centile Comparison", xlab="Age", ylab="Grip Strength")
 
-centiles(gbccg, xvar = grip_sample$age, col = "blue", lty = 1) #, add = TRUE
-legend("topright", legend=c("BCCG"), col=c("blue"), lty=1, cex=0.8)
-
 # Add centiles for BCT model to the existing plot
-centiles(gbct, xvar = grip_sample$age, col = "blue", lty = 2)
+centiles(gbct, xvar = grip_sample$age, col = "blue", lty = 2, cent=c(0.1, 0.4, 2,10, 25, 50,75,90,98,99.6, 99.9), ylab="grip", xlab="age")
+
+centiles(gbcpe, xvar = grip_sample$age, col = "blue", lty = 1, cent=c(0.1, 0.4, 2,10, 25, 50,75,90,98,99.6, 99.9), ylab="grip", xlab="age")
+#legend("topright", legend=c("BCCG"), col=c("blue"), lty=1, cex=0.8)
+
 # Update the legend to include BCT
-legend("topright", legend=c("BCT"), col=c("blue"), lty=1:2, cex=0.8)
+#legend("topright", legend=c("BCCG"), col=c("blue"), lty=1:2, cex=0.8)
 ```
 
 Residuals from the fitted models:
@@ -199,6 +199,9 @@ wp(gbccg, main="Worm Plot for BCCG Model")
 # For BCT Model
 wp(gbct, main="Worm Plot for BCT Model")
 
+# For BCPE Model
+wp(gbcpe, main="Worm Plot for BCPE Model")
+
 # For BCCG Model
 qstats_bccg <- Q.stats(gbccg)
 print(qstats_bccg)
@@ -206,4 +209,8 @@ print(qstats_bccg)
 # For BCT Model
 qstats_bct <- Q.stats(gbct)
 print(qstats_bct)
+
+# For BCPE Model
+qstats_bcpe <- Q.stats(gbcpe)
+print(qstats_bcpe)
 ```

@@ -88,34 +88,34 @@ load("mbi2_mbi3_mbi4_mbinn_mbitr.RData")
 ```{r}
 #########################################################
 # Validation
-cc_f <- data.frame(cc_train, fv=fitted(mbi2), x=seq(1, nrow(cc_f)))
+cc_f <- data.frame(cc_train, fv=fitted(mbi4), x=seq(1, nrow(cc_f)))
 
 ggplot(data=cc_f, 
-       aes(x=x, y=default.payment.next.month)) + geom_point() + geom_line(aes(x=x, y=fv), col="red")
+       aes(x=ID, y=default.payment.next.month)) + geom_point() + geom_line(aes(x=ID, y=fv), col="red")
 
-#plot(cc_train$x, cc_train$default.payment.next.month)
-#lines(cc_train$x, mbi2$mu.fv, col="red")
+#plot(cc_train$ID, cc_train$default.payment.next.month)
+#lines(cc_train$ID, mbi4$mu.fv, col="red")
 # just the  predictor eta
 
-#predict(mbi2)
-#mbi2$mu.lp
+#predict(mbi4)
+#mbi4$mu.lp
 
 # the parameters
-#predict(mbi2, type="response")
-# fitted(mbi2)
+#predict(mbi4, type="response")
+# fitted(mbi4)
 
 # plot actual values against predicted values
-plot(predict(mbi2, type="response"), 
-     cc$default.payment.next.month, 
+plot(predict(mbi4, type="response"), 
+     cc_train$default.payment.next.month, 
      xlab = "Predicted Values", 
      ylab = "Actual Values") 
 abline(a = 0, b = 1, lwd=2, col = "green")
 ```
 
 ```{r}
-# Correlation between actual and predicted values
-Actual<-cc$default.payment.next.month
-Predicted<-predict(mbi2, type="response")
+# Training correlation between actual and predicted values
+Actual<-cc_train$default.payment.next.month
+Predicted<-predict(mbi4, type="response")
 
 cor(Predicted, Actual)
 ```
@@ -134,36 +134,87 @@ legend(x = "topleft", legend = c("Actual","Predicted"), lty = 1, lwd = 1, col = 
 #add lines
 lines(Actual, col = "green", lwd = 1)
 lines(Predicted, col = "blue", lwd = 1)
+```
 
+```{r}
+predicted_probabilities <- predict(mbi4, newdata = cc_validation, type = "response")
+actual_values <- cc_validation$default.payment.next.month
+
+cc_v_f <- data.frame(cc_validation, fv=predicted_probabilities, x=seq(1, nrow(cc_validation)))
+ggplot(data=cc_v_f, 
+       aes(x=ID, y=default.payment.next.month)) + geom_point() + geom_line(aes(x=ID, y=fv), col="red")
+
+plot(cc_validation$ID, cc_validation$default.payment.next.month)
+lines(cc_validation$ID, predicted_probabilities, col="red")
+
+# the parameters
+cor(predicted_probabilities, actual_values)
+rmse <- sqrt(mean((predicted_probabilities - actual_values)^2))
+mae <- mean(abs(predicted_probabilities - actual_values))
+
+cat("RMSE: ", rmse, "\nMAE: ", mae, "\n")
+
+
+# plot actual values against predicted values
+plot(predict(mbi4, type="response"), 
+     cc_validation$default.payment.next.month, 
+     xlab = "Predicted Values", 
+     ylab = "Actual Values") 
+abline(a = 0, b = 1, lwd=2, col = "green")
+```
+
+```{r}
+plot(actual_values, predicted_probabilities, main = "Actual vs. Predicted",
+     xlab = "Actual Values", ylab = "Predicted Values")
+abline(0, 1, col = "red")  # Adding a 45-degree line
+```
+
+```{r}
+cor(predicted_probabilities, actual_values)
+library(pROC)
+predicted_probabilities <- predict(mbi4, newdata = cc_validation, type = "response")
+actual_values <- cc_validation$default.payment.next.month
+roc_curve <- roc(cc_validation$default.payment.next.month, predicted_probabilities)
+plot(roc_curve, main = "ROC Curve")
+```
+
+
+```{r}
 # with se
 
-pmbi2 <- predict(mbi2, what="mu", se.fit=TRUE ,type="response")
-names(pmbi2)
-pmbi2$se.fit
+pmbi4 <- predict(mbi4, what="mu", se.fit=TRUE ,type="response")
+names(pmbi4)
+pmbi4$se.fit
 
-#pcc_train.2 <- predict(mbi2, what="mu", se.fit=TRUE ,type="link")
+#pcc_train.2 <- predict(mbi4, what="mu", se.fit=TRUE ,type="link")
 #head(pcc_train.2$se.fit)
+```
 
-da <- data.frame(cc, fv=fitted(mbi2), pl=fitted(mbi2)-2*pmbi2$se.fit, pu=fitted(mbi2)+2*pmbi2$se.fit)
+```{r}
+da <- data.frame(cc, fv=fitted(mbi4), pl=fitted(mbi4)-2*pmbi4$se.fit, pu=fitted(mbi4)+2*pmbi4$se.fit)
 head(da)
 
-ggplot(data=da, aes(x=x, y=default.payment.next.month))+geom_point()+ 
+ggplot(data=da, aes(x=ID, y=default.payment.next.month))+geom_point()+ 
   geom_ribbon(aes(ymin = pl, ymax = pu), fill = "grey")+
-  geom_line(aes(x=x, y=fv), col="red")
+  geom_line(aes(x=ID, y=fv), col="red")
 
 # terms 
-pcc_train.2 <- predict(mbi2, what="mu", type="terms")
+pcc_train.2 <- predict(mbi4, what="mu", type="terms")
 colnames(pcc_train.2)
+```
 
+```{r}
 # now with se
-pcc_train.2 <- predict(mbi2, what="mu", type="terms", se.fit=TRUE)
+pcc_train.2 <- predict(mbi4, what="mu", type="terms", se.fit=TRUE)
 names(pcc_train.2)
 colnames(pcc_train.2$fit)
 colnames(pcc_train.2$se.fit)
 
-pcc_train.2 <- predict(mbi2, what="mu", type="terms", se.fit=TRUE, terms="qrt")
+pcc_train.2 <- predict(mbi4, what="mu", type="terms", se.fit=TRUE, terms="qrt")
 colnames(pcc_train.2$fit)
+```
 
+```{r}
 newaids<-data.frame(x=c(46,47,48), qrt=c(2,3,4))
 # predict "mu" at new values
 (ap1 <- predict(mod1, what="mu", newdata=newaids, type = "response"))

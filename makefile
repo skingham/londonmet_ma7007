@@ -2,29 +2,28 @@ LATEX := xelatex
 BUILDDIR := pdf
 TEXDIR := tex
 
-# ASSIGNMENT_TEXS := $(addprefix $(TEXDIR)/,21014912\ Case\ Study\ Report\ 24.tex assignment_introduction.tex assignment_method_summary.tex assignment_method_strengths_and_weaknesses.tex assignment_implementation.tex assignment_conclusion.tex assignment_appendix_code.tex code/coppersmith_rsa.mw references.bib)
 TEX_FILES := $(addprefix $(TEXDIR)/,21014912*.tex assignment_*.tex)
 
-TARGETNAME := 21014912_Case_Study_Report_24
-PDF_FILES := $(BUILDDIR)/$(TARGETNAME).pdf
+TARGET_NAME := 21014912_Case_Study_Report_24
+PDF_FILES := $(BUILDDIR)/$(TARGET_NAME).pdf
 
 LATEX_INTERMEDIATE := $(BUILDDIR)/
 TEXINPUTS:="./tex/"
 
 .PHONY: clean clean-bcf
-.PRECIOUS:= $(BUILDDIR)/%.bcf $(BUILDDIR)/%.bbl $(BUILDDIR)/%.toc
+.SECONDARY: $(BUILDDIR)/$(TARGET_NAME).bcf $(BUILDDIR)/$(TARGET_NAME).bbl $(BUILDDIR)/$(TARGET_NAME).toc
 
 
-$(BUILDDIR)/%.bcf: $(TEXDIR)/%.tex
+$(BUILDDIR)/%.bbl: $(TEXDIR)/references.bib $(TEX_FILES)
+	biber --input-directory $(TEXDIR) $(BUILDDIR)/$*.bcf
+
+$(BUILDDIR)/%.bcf: $(TEXDIR)/%.tex $(TEX_FILES)
 	TEXINPUTS="./tex/:" ; $(LATEX) -synctex=1 -interaction=nonstopmode --shell-escape -output-directory=$(BUILDDIR) $<
 
-$(BUILDDIR)/%.bbl: $(BUILDDIR)/%.bcf $(TEXDIR)/references.bib
-	biber --input-directory $(TEXDIR) $<
-
-$(BUILDDIR)/%.toc: $(TEXDIR)/%.tex
+$(BUILDDIR)/%.toc: $(TEXDIR)/%.tex $(TEX_FILES)
 	TEXINPUTS="./tex/:" ; $(LATEX) -synctex=0 -interaction=nonstopmode --shell-escape -output-directory=$(BUILDDIR) $<
 
-$(BUILDDIR)/%.pdf: $(TEXDIR)/%.tex $(BUILDDIR)/%.bbl $(BUILDDIR)/%.toc $(TEX_FILES)
+$(BUILDDIR)/%.pdf: $(TEXDIR)/%.tex $(BUILDDIR)/%.bcf $(BUILDDIR)/%.bbl $(BUILDDIR)/%.toc $(TEX_FILES)
 	TEXINPUTS="./tex/:" ; $(LATEX) -synctex=1 -interaction=nonstopmode --shell-escape -output-directory=$(BUILDDIR) $<
 
 $(BUILDDIR):
