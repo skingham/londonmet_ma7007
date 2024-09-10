@@ -1,0 +1,102 @@
+---
+title: "MA7007 - Statistical Modelling and Forecasting Case Study Report 2023-2024"
+output:
+  pdf_document:
+    keep_tex: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# suppress the warnings by setting warn=-1 
+options(warn=-1) 
+```
+
+First, let's load the data, subset it for the specific age group, and plot the histogram to find a suitable value for `nbins`.
+
+```{r loading_data}
+# Load the packages
+library(ggplot2)
+library(gamlss)
+library(gamlss.ggplots)
+library(gamlss.add)
+library(gamlss.data)
+library(MASS)
+
+# Load the dataset
+data(dbbmi)
+summary(dbbmi)
+```
+
+```{r select_age_group}
+# Subset for ages 15 to 16
+old <- 15
+dbbmi_15 <- with(dbbmi, subset(dbbmi, age > old & age < old + 1))
+bmi15 <- dbbmi_15$bmi
+summary(bmi15)
+```
+
+```{r histograms}
+# Plot the histogram; adjust nbins as needed to make the histogram look good
+binwith = 0.5
+nbins = trunc(max(bmi15) - min(bmi15)) / binwith
+
+truehist(bmi15, nbins=nbins)
+
+density(bmi15, cut = 0)
+
+gamlss.ggplots:::y_hist(dbbmi_15$bmi,
+                        from=floor(min(bmi15)), 
+                        to=ceiling(max(bmi15)),
+                        binwidth=binwith,
+                        title="Histogram of BMI for 15 year olds")
+```
+Next, we'll fit several parametric distributions to the data. Common distributions for BMI data include the Normal, Log-Normal, and Gamma distributions, among others. 
+The `gamlss` package provides functions to fit a wide range of distributions.
+
+```{r fitDist}
+# Sense check our thought on skew and kurtosis by plotting against the Normal distribution
+plot(histDist(bmi, "NO", density=TRUE, line.col=c(1,1), line.ty=c(1,2), nbins=nbins, data=dbbmi_15))
+```
+
+The choice of distribution can be justified by comparing the Akaike Information Criterion (AIC) values of the fitted models—the model with the lowest AIC is typically preferred as it suggests a good fit with relatively lower complexity.
+
+```{r chooseDist}
+# No explanitory variable so we can use fitDist to get the best dist for continuous distributions
+f1 <- fitDist(bmi, type='realAll', data=dbbmi_15, k=2)
+f1$fits[1:8]
+
+# Validate fitDist by looking at the AIC for different GAIC penalties
+m0 <- gamlss(bmi ~ 1, family=NO, data=dbbmi_15)
+c1 <- chooseDist(m0, type='realAll', data=dbbmi_15, parallel="snow", ncpus=4)
+c1
+
+# Here is out selected fitted distribution 
+fit_exgaus <- update(m0, family="exGAUS", k=2)
+```
+
+The Best fit is exGAUS
+
+```{r}
+# Plot out the distribution with the lowest GAIC
+m_exgaus <- histDist(bmi, "exGAUS", density=TRUE, line.col=c(1,1), line.ty=c(1,2), nbins=nbins, data=dbbmi_15)
+plot(fit_exgaus)
+wp(fit_exgaus)
+```
+
+Finally, for the chosen model, we can output the parameter estimates and interpret them according to the distribution's characteristics.
+
+
+```{r}
+# Value of fitted parameters
+fitted(f1, "mu")[1]
+fitted(f1, "sigma")[1]
+fitted(f1, "nu")[1]
+```
+
+```{r}
+# Output parameter estimates for the chosen model
+summary(fit_exgaus)
+```
+
+Interpretation of the parameters will depend on the selected distribution.

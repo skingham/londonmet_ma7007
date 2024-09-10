@@ -1,0 +1,488 @@
+---
+title: "Untitled"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# suppress the warnings by setting warn=-1 
+options(warn=-1) 
+```
+
+```{r}
+
+# Load the packages
+library(doParallel)
+library(ggplot2)
+library(corrplot)
+library(gamlss)
+library(gamlss.ggplots)
+library(gamlss.add)
+library(gamlss.data)
+library(gamlss.foreach)
+```
+
+
+```{r load_data}
+########################################################################
+########################################################################
+cc <- read.csv("../data/UCI_Credit_Card.csv")
+
+########################################################################
+# Schema of UCI_Credit_Card.csv
+# https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients
+# "ID","LIMIT_BAL","SEX","EDUCATION","MARRIAGE","AGE","PAY_0","PAY_2","PAY_3","PAY_4","PAY_5","PAY_6","BILL_AMT1","BILL_AMT2","BILL_AMT3","BILL_AMT4","BILL_AMT5","BILL_AMT6","PAY_AMT1","PAY_AMT2","PAY_AMT3","PAY_AMT4","PAY_AMT5","PAY_AMT6","default.payment.next.month"
+# Variable Name Role	Type	  Demographic	      Description	Units	Missing Values
+# ID            ID	  Integer				                              no
+# X1	      Feature	  Integer		                LIMIT_BAL		      no
+# X2	      Feature	  Integer	  Sex	            SEX		            no
+# X3	      Feature	  Integer	  Education Level	EDUCATION		      no
+# X4	      Feature	  Integer	  Marital Status	MARRIAGE		      no
+# X5	      Feature	  Integer	  Age	            AGE		            no
+# X6	      Feature	  Integer		                PAY_0		          no
+# X7	      Feature	  Integer		                PAY_2		          no
+# X8	      Feature	  Integer		                PAY_3		          no
+# X9	      Feature	  Integer		                PAY_4		          no
+# X10	      Feature	  Integer		                PAY_5		          no
+# X11	      Feature	  Integer		                PAY_6		          no
+# X12	      Feature	  Integer		                BILL_AMT1		      no
+# X13	      Feature	  Integer		                BILL_AMT2		      no
+# X14	      Feature	  Integer		                BILL_AMT3		      no
+# X15	      Feature	  Integer		                BILL_AMT4		      no
+# X16	      Feature	  Integer		                BILL_AMT5		      no
+# X17	      Feature	  Integer		                BILL_AMT6		      no
+# X18	      Feature	  Integer		                PAY_AMT1		      no
+# X19	      Feature	  Integer		                PAY_AMT2		      no
+# X20	      Feature	  Integer		                PAY_AMT3		      no
+# X21	      Feature	  Integer		                PAY_AMT4		      no
+# X22	      Feature	  Integer		                PAY_AMT5		      no
+# X23	      Feature	  Integer		                PAY_AMT6		      no
+# Y	        Target	  Binary		                default.payment.next.month		no
+names(cc)
+dim(cc)
+```
+
+```{r}
+################################################################################
+# Split the credit card data into training and validation dataframes 70:30
+
+set.seed(123)  # Setting a seed to make the example reproducible
+
+# Determine the size of the dataset
+data_size <- nrow(cc)
+train_size <- floor(0.7 * nrow(cc))  # 70% of the data for training
+
+# Create a random sample of row indices for the training set
+train_indices <- sample(seq_len(data_size), size = train_size)
+
+# Subset the data into training and validation sets
+cc_train <- cc[train_indices, ]
+cc_validation <- cc[-train_indices, ]
+
+head(cc_train, 10)
+```
+
+```{r}
+# may be too many for demonstration 
+########################################################################
+########################################################################
+# Drop older bill_amts  
+cc1 <- cc_train[, -c(1,  14, 15, 16, 17, 18)]
+dim(cc1)
+names(cc1)
+head(cc1)
+
+```
+
+```{r}
+cc2  <- cc1[, -c(14, 15, 16, 17, 18)]
+head(cc2)
+names(cc2)
+dim(cc2)
+
+```
+
+```{r}
+cc3 <- cc_train[, -c(1, 6, 16, 17, 18)]
+head(cc3)
+names(cc3)
+dim(cc3)
+```
+
+```{r}
+########################################################################
+########################################################################
+# exploring you data 
+plot(cc2)
+# default.payment.next.month line is of interest 
+```
+
+```{r}
+# also look for high correlation in the x's
+which.Data.Corr(cc3, r=0.3)
+cc_cor3 <- cor(cc3)
+corrplot(cc_cor3)
+```
+
+```{r}
+# also look for high correlation in the x's
+which.Data.Corr(cc_train, r=0.3)
+cc_train_cor <- cor(cc_train)
+corrplot(cc_train_cor)
+```
+
+```{r}
+######################################################################## 
+# is any missing
+dim(cc3)
+#dim(is.na(cc3)) 
+dim(na.omit(cc3))
+# no missing 
+```
+
+```{r}
+####################################################################### 
+# look of outliers
+plot(default.payment.next.month~LIMIT_BAL, data=cc3)
+plot(default.payment.next.month~BILL_AMT1, data=cc3)
+
+#possible transforming?
+plot(default.payment.next.month~sqrt(BILL_AMT1), data=cc3)
+plot(default.payment.next.month~log(BILL_AMT1), data=cc3)
+
+# I am not sure
+plot(default.payment.next.month~PAY_0, data=cc3)
+plot(default.payment.next.month~log(PAY_0), data=cc3)
+
+```
+
+```{r}
+# a possible transformation 
+#cc$SEX <- factor(cc$SEX)
+plot(default.payment.next.month~factor(SEX), data=cc2)
+
+# if it is not make it a factor
+#cc$EDUCATION <- factor(cc$EDUCATION)
+plot(default.payment.next.month~factor(EDUCATION), data=cc2)
+
+#cc$MARRIAGE <- factor(cc$MARRIAGE)
+plot(default.payment.next.month~factor(MARRIAGE), data=cc2)
+```
+
+```{r}
+plot(default.payment.next.month~PAY_AMT1, data=cc2)
+
+plot(default.payment.next.month~AGE, data=cc)
+```
+
+```{r}
+####################################################################### 
+# check for funny values
+# check why the discrete values 
+# X7	      Feature	  Integer		                PAY_2		          no
+# X8	      Feature	  Integer		                PAY_3		          no
+# X9	      Feature	  Integer		                PAY_4		          no
+# X10	      Feature	  Integer		                PAY_5		          no
+# X11	      Feature	  Integer		                PAY_6		          no
+# X13	      Feature	  Integer		                BILL_AMT2		      no
+# X14	      Feature	  Integer		                BILL_AMT3		      no
+# X15	      Feature	  Integer		                BILL_AMT4		      no
+# X16	      Feature	  Integer		                BILL_AMT5		      no
+# X17	      Feature	  Integer		                BILL_AMT6		      no
+# X19	      Feature	  Integer		                PAY_AMT2		      no
+# X20	      Feature	  Integer		                PAY_AMT3		      no
+# X21	      Feature	  Integer		                PAY_AMT4		      no
+# X22	      Feature	  Integer		                PAY_AMT5		      no
+# X23	      Feature	  Integer		                PAY_AMT6		      no
+# 
+plot(default.payment.next.month~PAY_2, data=cc_train)
+plot(default.payment.next.month~PAY_3, data=cc_train)
+plot(default.payment.next.month~PAY_4, data=cc_train)
+plot(default.payment.next.month~PAY_5, data=cc_train)
+plot(default.payment.next.month~PAY_6, data=cc_train)
+
+plot(default.payment.next.month~BILL_AMT2, data=cc_train)
+plot(default.payment.next.month~log(BILL_AMT2), data=cc_train)
+plot(default.payment.next.month~sqrt(BILL_AMT2), data=cc_train)
+plot(default.payment.next.month~BILL_AMT3, data=cc_train)
+plot(default.payment.next.month~BILL_AMT4, data=cc_train)
+plot(default.payment.next.month~BILL_AMT5, data=cc_train)
+plot(default.payment.next.month~BILL_AMT6, data=cc_train)
+
+plot(default.payment.next.month~PAY_AMT2, data=cc_train)
+plot(default.payment.next.month~log(PAY_AMT2), data=cc_train)
+plot(default.payment.next.month~sqrt(PAY_AMT2), data=cc_train)
+plot(default.payment.next.month~PAY_AMT3, data=cc_train)
+plot(default.payment.next.month~PAY_AMT4, data=cc_train)
+plot(default.payment.next.month~PAY_AMT5, data=cc_train)
+plot(default.payment.next.month~PAY_AMT6, data=cc_train)
+
+######################################################################
+```
+
+```{r}
+######################################################################
+# checking simple regression with normal errors 
+names(cc_train)
+
+mbi <- gamlss(default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+AGE+
+                factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+
+                BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6, 
+              family=BI, # BI is for Binomial distribution
+              data=cc_train)
+resid_plots(mbi)
+plot(mbi)
+wp(mbi)
+
+GAIC(mbi)
+```
+
+```{r}
+# Beta Binomial
+mbb <- gamlss(default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+AGE+
+                factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+
+                BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6, 
+              family=BB, data=cc_train)
+resid_plots(mbb)
+wp(mbb)
+GAIC(mbi, mbb)
+```
+
+```{r}
+mdbi <- gamlss(default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+AGE+
+                factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+
+                BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6, 
+              family=DBI, 
+              data=cc_train)
+resid_plots(mdbi)
+wp(mdbi)
+GAIC(mbi, mdbi)
+```
+
+```{r}
+mzibb <- gamlss(default.payment.next.month~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+AGE+
+                factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+                  BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6, 
+                family=ZIBB, 
+                data=cc_train)
+resid_plots(mzibb)
+wp(mzibb)
+GAIC(mbi, mzibb)
+```
+
+```{r}
+# Have I missed something; chooseDist
+T1 <- chooseDist(mbi, type="binom", parallel="snow", ncpuss=8)
+T1
+```
+
+```{r}
+load("mbi2_mbi3_mbi4_mbinn_mbitr.RData")
+#######################################################################
+# first parametric model 
+mbi0 <- gamlss(default.payment.next.month~1,family=BI, data=cc_train)
+# mbi2 <- stepGAICAll.B(mbi0, 
+#                      scope=list(lower=~1, 
+#                                 upper=~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+
+#                                        AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+#                                        BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6),
+#                      parallel="snow", ncpuss=12)
+mbi2
+summary(mbi2)
+```
+
+```{r}
+# checking the model
+resid_plots(mbi2)
+resid_plots(mbi2)
+resid_wp(mbi2)
+```
+
+```{r}
+# interpretation of the model 
+fitted_terms(mbi2) # mu
+summary(mbi2)
+```
+
+```{r}
+fitted_pdf(mbi2, obs=c(1000,2000,3000, 4000), from=0, to=1000000 )
+```
+
+```{r}
+#######################################################################
+# mbi3 <- stepGAICAll.A(mbi0, 
+#                      scope=list(lower=~1, 
+#                                 upper=~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+
+#                                        AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+#                                        BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6),
+#                      parallel="snow", ncpuss=12)
+mbi3
+summary(mbi3)
+
+GAIC(mbi, mbi2, mbi3)
+```
+
+```{r}
+# checking the model
+resid_plots(mbi3)
+resid_wp(mbi3)
+```
+
+```{r}
+# interpretation of the model 
+fitted_terms(mbi3)
+
+fitted_terms(mbi3, partial=T)
+```
+
+```{r}
+fitted_pdf(mbi3, obs=c(1000,2000,3000, 4000), from=0, to=1000000 )
+fitted_pdf(mbi3, obs=1:100, from=0, to=1000000 )
+#######################################################################
+```
+
+```{r}
+#######################################################################
+# smoothing terms
+#mbi4 <- stepGAICAll.A(mbi0, 
+#                      scope=list(lower=~1, 
+#                                 upper=~pb(LIMIT_BAL)+pb(PAY_0)+pb(PAY_2)+pb(PAY_3)+pb(PAY_4)+pb(PAY_5)+pb(PAY_6)+
+#                                   AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+#                                   pb(BILL_AMT1)+pb(PAY_AMT1)+pb(BILL_AMT2)+pb(PAY_AMT2)+pb(BILL_AMT3)+pb(PAY_AMT3)+
+#                                   pb(BILL_AMT4)+pb(PAY_AMT4)+pb(BILL_AMT5)+pb(PAY_AMT5)+pb(BILL_AMT6)+pb(PAY_AMT6)),
+#                       parallel="snow", ncpuss=12, k=4) #log(nrows(cc_train)))
+mbi4
+summary(mbi4)
+```
+
+```{r}
+fitted_terms(mbi4, partial=T)
+fitted_terms(mbi4, partial=T)
+
+GAIC(mbi, mbi2, mbi3, mbi4)
+```
+
+
+```{r}
+#######################################################################
+# neural network 
+# mbinn <- gamlss(default.payment.next.month~nn(~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_4+PAY_5+PAY_6+
+#                                               AGE+factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+
+#                                               BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+BILL_AMT3+PAY_AMT3+
+#                                               BILL_AMT4+PAY_AMT4+BILL_AMT5+PAY_AMT5+BILL_AMT6+PAY_AMT6,  
+#                                              size=10, decay=0.01),
+#                 family=BI, data=cc_train,  c.crit=0.01)
+```
+
+```{r}
+plot(getSmo(mbinn))  
+resid_plots(mbinn )
+resid_wp(mbinn )
+
+GAIC(mbi, mbi2, mbi3, mbi4, mbinn)
+GAIC(mbi, mbi2, mbi3, mbi4, mbinn, k=log(nrow(cc_train)))
+#######################################################################
+
+```
+
+```{r}
+#######################################################################                
+# regression trees
+# mbitr <- gamlss(default.payment.next.month~tr(~LIMIT_BAL+PAY_0+PAY_2+PAY_3+PAY_5+AGE+
+#                 factor(EDUCATION)+factor(SEX)+factor(MARRIAGE)+BILL_AMT1+PAY_AMT1+BILL_AMT2+PAY_AMT2+
+#                 BILL_AMT3+PAY_AMT3+PAY_AMT4+PAY_AMT5+PAY_AMT6),
+#                 family=BI, 
+#                 data=cc_train, 
+#                 c.crit=0.01,  
+#                 bf.cyc=1)
+```
+
+```{r}
+plot(getSmo(mbitr))
+text(getSmo(mbitr))
+resid_plots(mbitr)
+```
+
+```{r}
+GAIC(mbi, mbi2, mbi3, mbi4, mbinn, mbitr) 
+GAIC(mbi, mbi2, mbi3, mbi4, mbinn, mbitr,  k=log(nrow(cc_train)))
+#####################################################################
+```
+
+```{r}
+#save(mbi2, mbi3, mbi4, mbinn, mbitr, file="mbi2_mbi3_mbi4_mbinn_mbitr.RData")
+#load("mbi2_mbi3_mbi4_mbinn_mbitr.RData")
+```
+
+```{r}
+#####################################################################
+str(cc_train)
+dim(cc_train)
+l1 <- lm(default.payment.next.month~., data=cc_train)
+summary(l1)
+
+m1 <- gamlss(default.payment.next.month~., data=cc_train)
+resid_plots(m1)
+wp(m1)
+
+m2 <- gamlss(default.payment.next.month~., data=cc_train, family=BI)
+resid_plots(m2)
+resid_wp(m2)
+summary(m2)
+######################################################################
+```
+
+```{r}
+######################################################################
+X <- as.matrix(cc_train[,1:23])
+class(X)
+dim(X)
+mod1 <- gamlss(default.payment.next.month~pc(x=X), 
+               data=cc_train, family=BI)
+
+resid_wp(mod1)
+
+mod2 <- gamlss(default.payment.next.month~pc(x=X), 
+               sigma.fo=~pc(x=X), 
+               data=cc_train, family=DBI)             
+resid_wp(mod2)
+
+mod3 <- gamlss(default.payment.next.month~pc(x=X), 
+               sigma.fo=~pc(x=X), 
+               nu.fo=~pc(x=X), 
+               data=cc_train, family=ZIBB)             
+
+GAIC(m2, mod1, mod2,mod3)
+
+GAIC(m2, mod1, mod2,mod3,k=log(nrow(cc_train)))
+
+resid_wp(mod2)
+
+model_wp(m2, mod1, mod2)
+
+```
+
+```{r}
+#--------------------------------------------------------
+#interaction formula
+#
+form2 <- as.formula(paste("default.payment.next.month ~ ",paste0(paste0("(",paste(colnames(X), collapse='+')), ")^2"))) 
+form2
+
+m22 <- gamlss(form2, data=cc_train)
+m22
+#summary(m22)
+
+resid_plots(m22)
+wp(m22)
+
+
+m33 <- gamlss(form2, data=cc_train, family=BB)
+resid_plots(m33)
+resid_wp(m33)
+
+GAIC(m2, mod1, mod2,mod3, m33, k=log(nrow(cc_train)))
+#########################################################
+```

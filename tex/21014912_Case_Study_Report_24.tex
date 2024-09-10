@@ -1,0 +1,238 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass{article}
+
+\usepackage[english]{babel}
+\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+%\usepackage[backend=biber, sorting=nyt, style=authoryear-ibid]{biblatex}
+\usepackage[backend=biber, sorting=nyt, style=ieee]{biblatex}
+\usepackage[inkscapeformat=png]{svg}
+\usepackage[outputdir=pdf]{minted}
+\usepackage{graphicx}
+\graphicspath{ {tex/figures/} }
+\usepackage{pdfpages}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{parskip}
+\usepackage{float}
+%\usepackage{lipsum}
+\usepackage{setspace}
+\doublespacing
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{fontspec}
+\usepackage{fontawesome5}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\usepackage{csquotes}
+
+\ifPDFTeX
+  \usepackage[T1]{fontenc}    % Output font encoding for international characters
+  \usepackage[utf8]{inputenc} % Required for inputting international characters
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\urlstyle{same} % disable monospaced font for URLs
+% \usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\},fontsize=\small}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+
+\usepackage{r_studio_code}
+
+%\usepackage{palatino} % Use the Palatino font
+%\usepackage{microtype} % Improves spacing
+%\usepackage[bf,sf,center]{titlesec} % Required for modifying section titles - bold, sans-serif, centered
+%\usepackage{fancyhdr} % Required for modifying headers and footers
+%\fancyhead[L]{\textsf{\rightmark}} % Top left header
+%\fancyhead[R]{\textsf{\leftmark}} % Top right header
+%\renewcommand{\headrulewidth}{1.4pt} % Rule under the header
+%\fancyfoot[C]{\textbf{\textsf{\thepage}}} % Bottom center footer
+%\renewcommand{\footrulewidth}{1.4pt} % Rule under the footer
+%\pagestyle{fancy} % Use the custom headers and footers throughout the document
+
+% Appendix dictionary template: print each word on the page
+% \markboth{}{} prints the first word on the page in the top left header and the last word in the top right
+%\newcommand{\entry}[4]{\markboth{#1}{#1}\textbf{#1}\ {(#2)}\ \textit{#3}\ $\bullet$\ {#4}}
+\newcommand{\entry}[2]{\markboth{#1}{#1}\textbf{#1}\ $\bullet$\ {#2}}
+
+
+%----------------------------------------------------------------------------------------
+%  The completed Case Study Report (no more than 5000 words) 
+%    must be submitted on Weblearn by Friday 10th of May 2024 at 15:00.
+%
+%  A single pdf of your report saved with the appropriate filename (see below). The filenames should be of the form: A B C.pdf
+%
+%  A = Your ID, B = Case Study Report , C = YY (last 2 digits of the year) For example : 12345678 Case Study Report 24.pdf
+%
+%  DONOTPUTDATAinthereport(onlythefirst20casesintheAppendix).
+%
+%  Anyfigureyouuseshouldhaveacaptionbelowlike:
+%     Figure 1: Showing the linear regression of y against time. (You should refer to Figure 1 in the text).
+%
+%  Youshouldonlyputtheimportantresultsorfiguresinthereportandcommentonthem.
+%
+%  PutPAGENumbersintoyourreport.
+%
+%  The report does not have to be long. Extensive output without comments will get little credit. Your comments and explanation are most important.
+%  
+%----------------------------------------------------------------------------------------
+
+%\bibliography{references}
+\addbibresource{references.bib}
+
+\title{MA7007 - Statistical Modelling and Forecasting Case Study Report 2023-2024}
+\author{Stuart Kingham: ID 21014912}
+
+\hypersetup{
+  pdftitle={MA7007 - Statistical Modelling and Forecasting Case Study Report 2023-2024},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\begin{document}
+\doublespacing
+
+%\begin{center}
+%{\LARGE Case Study Report 2023-2024}
+%\end{center} 
+%\vspace*{\fill}
+
+
+%\maketitle
+\begin{titlepage}
+  \topskip0pt
+  \vspace*{\fill}
+  \begin{center}
+       \vspace*{1cm}
+
+       {\LARGE Case Study Report 2023-2024}
+
+       \vspace*{1cm}
+       {\large \textbf{Statistical Analysis of Data Sets}}
+       
+       %\vspace{1.5cm}
+
+       \vfill
+
+       \textbf{Stuart Kingham: ID 2101491}
+
+       \vfill
+                        
+       \vspace{0.8cm}
+     
+       %\includegraphics[width=0.4\textwidth]{university}
+
+       MM7007: Statistical Modelling and Forecasting\\
+       School of Computing and Digital Media\\
+       London Metropolitan University\\
+       May 10, 2024
+            
+  \end{center}
+  \vspace*{\fill}
+\end{titlepage}
+
+\pagebreak
+
+\begin{abstract}
+This report, prepared as part of the Statistical Modelling and Forecasting master's course,
+explores the application of modern statistical techniques within the R programming environment,
+emphasizing predictive analytics and forecasting. The course equips graduate students with
+advanced statistical tools for analyzing real-world data
+and fosters skills to understand professional literature and conduct independent research.
+\end{abstract}
+
+\newpage
+
+\singlespacing 
+\tableofcontents
+\listoffigures
+\listoftables
+\doublespacing
+
+\pagenumbering{roman}
+\pagenumbering{arabic}
+\newpage
+
+\input{assignment_introduction}
+
+\pagebreak
+
+\input{assignment_first_data_set}
+
+\pagebreak
+
+\input{assignment_second_data_set}
+
+\pagebreak
+
+\input{assignment_third_data_set}
+
+%\input{assignment_peer_review}
+
+\pagebreak
+
+\input{assignment_conclusion}
+
+\singlespace
+\pagebreak
+
+\printbibliography
+
+\pagebreak
+
+\appendix
+
+\section{Appendix A: R Code for Part I}
+
+To address the given task, we’ll go through it step by step, writing R code for each part. The task involves analyzing BMI data for Dutch boys aged 15 to 16 years from the dbbmi dataset in the gamlss.data package, fitting parametric distributions, and selecting an appropriate one based on the analysis.
+
+\input{assignment_appendix_q1_code}
+
+\section{Appendix B: R Code for Part II}
+
+\input{assignment_appendix_q2_code}
+
+Analyse a different sample of 1000 from the original 3766 English boys. The data are stored in the packages gamlss.data under the name grip and contain the variables grip and age. The aim here is to create centile curves for grip given age.
+
+\pagebreak
+
+\section{Appendix C: R Code for Part III}
+
+\input{assignment_appendix_q3_code}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

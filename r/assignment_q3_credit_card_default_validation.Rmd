@@ -1,0 +1,308 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# suppress the warnings by setting warn=-1 
+options(warn=-1) 
+```
+
+```{r}
+# Load the packages
+library(doParallel)
+library(ggplot2)
+library(corrplot)
+library(gamlss)
+library(gamlss.ggplots)
+library(gamlss.add)
+library(gamlss.data)
+library(gamlss.foreach)
+```
+
+
+```{r load_data}
+########################################################################
+########################################################################
+cc <- read.csv("../data/UCI_Credit_Card.csv")
+
+########################################################################
+# Schema of UCI_Credit_Card.csv
+# https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients
+# "ID","LIMIT_BAL","SEX","EDUCATION","MARRIAGE","AGE","PAY_0","PAY_2","PAY_3","PAY_4","PAY_5","PAY_6","BILL_AMT1","BILL_AMT2","BILL_AMT3","BILL_AMT4","BILL_AMT5","BILL_AMT6","PAY_AMT1","PAY_AMT2","PAY_AMT3","PAY_AMT4","PAY_AMT5","PAY_AMT6","default.payment.next.month"
+# Variable Name Role	Type	  Demographic	      Description	Units	Missing Values
+# ID            ID	  Integer				                              no
+# X1	      Feature	  Integer		                LIMIT_BAL		      no
+# X2	      Feature	  Integer	  Sex	            SEX		            no
+# X3	      Feature	  Integer	  Education Level	EDUCATION		      no
+# X4	      Feature	  Integer	  Marital Status	MARRIAGE		      no
+# X5	      Feature	  Integer	  Age	            AGE		            no
+# X6	      Feature	  Integer		                PAY_0		          no
+# X7	      Feature	  Integer		                PAY_2		          no
+# X8	      Feature	  Integer		                PAY_3		          no
+# X9	      Feature	  Integer		                PAY_4		          no
+# X10	      Feature	  Integer		                PAY_5		          no
+# X11	      Feature	  Integer		                PAY_6		          no
+# X12	      Feature	  Integer		                BILL_AMT1		      no
+# X13	      Feature	  Integer		                BILL_AMT2		      no
+# X14	      Feature	  Integer		                BILL_AMT3		      no
+# X15	      Feature	  Integer		                BILL_AMT4		      no
+# X16	      Feature	  Integer		                BILL_AMT5		      no
+# X17	      Feature	  Integer		                BILL_AMT6		      no
+# X18	      Feature	  Integer		                PAY_AMT1		      no
+# X19	      Feature	  Integer		                PAY_AMT2		      no
+# X20	      Feature	  Integer		                PAY_AMT3		      no
+# X21	      Feature	  Integer		                PAY_AMT4		      no
+# X22	      Feature	  Integer		                PAY_AMT5		      no
+# X23	      Feature	  Integer		                PAY_AMT6		      no
+# Y	        Target	  Binary		                default.payment.next.month		no
+names(cc)
+dim(cc)
+```
+
+```{r}
+################################################################################
+# Split the credit card data into training and validation dataframes 70:30
+
+set.seed(123)  # Setting a seed to make the example reproducible
+
+# Determine the size of the dataset
+data_size <- nrow(cc)
+train_size <- floor(0.7 * nrow(cc))  # 70% of the data for training
+
+# Create a random sample of row indices for the training set
+train_indices <- sample(seq_len(data_size), size = train_size)
+
+# Subset the data into training and validation sets
+cc_train <- cc[train_indices, ]
+cc_validation <- cc[-train_indices, ]
+```
+
+
+```{r}
+load("mbi2_mbi3_mbi4_mbinn_mbitr.RData")
+```
+
+```{r}
+#########################################################
+# Validation
+cc_f <- data.frame(cc_train, fv=fitted(mbi4), x=seq(1, nrow(cc_f)))
+
+ggplot(data=cc_f, 
+       aes(x=ID, y=default.payment.next.month)) + geom_point() + geom_line(aes(x=ID, y=fv), col="red")
+
+#plot(cc_train$ID, cc_train$default.payment.next.month)
+#lines(cc_train$ID, mbi4$mu.fv, col="red")
+# just the  predictor eta
+
+#predict(mbi4)
+#mbi4$mu.lp
+
+# the parameters
+#predict(mbi4, type="response")
+# fitted(mbi4)
+
+# plot actual values against predicted values
+plot(predict(mbi4, type="response"), 
+     cc_train$default.payment.next.month, 
+     xlab = "Predicted Values", 
+     ylab = "Actual Values") 
+abline(a = 0, b = 1, lwd=2, col = "green")
+```
+
+```{r}
+# Training correlation between actual and predicted values
+Actual<-cc_train$default.payment.next.month
+Predicted<-predict(mbi4, type="response")
+
+cor(Predicted, Actual)
+```
+
+```{r}
+# Compare actual and predicted values
+dtfr <-data.frame(Actual, Predicted)
+dtfr
+
+#### To obtain Actual versus Predicted graph
+plot(Actual, type = "l", col = "black", lwd = 1, ylab = "Actual Values", main = "Actual versus Predicted Graph")
+
+#add a legend
+legend(x = "topleft", legend = c("Actual","Predicted"), lty = 1, lwd = 1, col = c("green", "blue"))
+
+#add lines
+lines(Actual, col = "green", lwd = 1)
+lines(Predicted, col = "blue", lwd = 1)
+```
+
+```{r}
+predicted_probabilities <- predict(mbi4, newdata = cc_validation, type = "response")
+actual_values <- cc_validation$default.payment.next.month
+
+cc_v_f <- data.frame(cc_validation, fv=predicted_probabilities, x=seq(1, nrow(cc_validation)))
+ggplot(data=cc_v_f, 
+       aes(x=ID, y=default.payment.next.month)) + geom_point() + geom_line(aes(x=ID, y=fv), col="red")
+
+plot(cc_validation$ID, cc_validation$default.payment.next.month)
+lines(cc_validation$ID, predicted_probabilities, col="red")
+
+# the parameters
+cor(predicted_probabilities, actual_values)
+rmse <- sqrt(mean((predicted_probabilities - actual_values)^2))
+mae <- mean(abs(predicted_probabilities - actual_values))
+
+cat("RMSE: ", rmse, "\nMAE: ", mae, "\n")
+
+
+# plot actual values against predicted values
+plot(predict(mbi4, type="response"), 
+     cc_validation$default.payment.next.month, 
+     xlab = "Predicted Values", 
+     ylab = "Actual Values") 
+abline(a = 0, b = 1, lwd=2, col = "green")
+```
+
+```{r}
+plot(actual_values, predicted_probabilities, main = "Actual vs. Predicted",
+     xlab = "Actual Values", ylab = "Predicted Values")
+abline(0, 1, col = "red")  # Adding a 45-degree line
+```
+
+```{r}
+cor(predicted_probabilities, actual_values)
+library(pROC)
+predicted_probabilities <- predict(mbi4, newdata = cc_validation, type = "response")
+actual_values <- cc_validation$default.payment.next.month
+roc_curve <- roc(cc_validation$default.payment.next.month, predicted_probabilities)
+plot(roc_curve, main = "ROC Curve")
+```
+
+
+```{r}
+# with se
+
+pmbi4 <- predict(mbi4, what="mu", se.fit=TRUE ,type="response")
+names(pmbi4)
+pmbi4$se.fit
+
+#pcc_train.2 <- predict(mbi4, what="mu", se.fit=TRUE ,type="link")
+#head(pcc_train.2$se.fit)
+```
+
+```{r}
+da <- data.frame(cc, fv=fitted(mbi4), pl=fitted(mbi4)-2*pmbi4$se.fit, pu=fitted(mbi4)+2*pmbi4$se.fit)
+head(da)
+
+ggplot(data=da, aes(x=ID, y=default.payment.next.month))+geom_point()+ 
+  geom_ribbon(aes(ymin = pl, ymax = pu), fill = "grey")+
+  geom_line(aes(x=ID, y=fv), col="red")
+
+# terms 
+pcc_train.2 <- predict(mbi4, what="mu", type="terms")
+colnames(pcc_train.2)
+```
+
+```{r}
+# now with se
+pcc_train.2 <- predict(mbi4, what="mu", type="terms", se.fit=TRUE)
+names(pcc_train.2)
+colnames(pcc_train.2$fit)
+colnames(pcc_train.2$se.fit)
+
+pcc_train.2 <- predict(mbi4, what="mu", type="terms", se.fit=TRUE, terms="qrt")
+colnames(pcc_train.2$fit)
+```
+
+```{r}
+newaids<-data.frame(x=c(46,47,48), qrt=c(2,3,4))
+# predict "mu" at new values
+(ap1 <- predict(mod1, what="mu", newdata=newaids, type = "response"))
+(ap2 <- predict(mod2, what="mu", newdata=newaids, type = "response"))
+(ap3 <- predict(mod3, what="mu", newdata=newaids, type = "response"))
+
+# get the term contributions to the predictor of mu
+(ap4 <- predict(mod3, what="mu", newdata=newaids, type = "terms"))
+# predict sigma at new values
+(ap5 <- predict(mod3, what="sigma", newdata=newaids, type="response"))
+# usinf tranformed x variable
+ap1
+ap2
+ap3
+ap4
+ap5
+
+# compare predicted mu at new data for mod1, mod2 & mod3
+dtfr2<-data.frame(ap1, ap2, ap3)
+dtfr2
+
+#### To obtain the graph of Predicted Values
+plot(ap1, type = "l", col = "black", lwd = 1, ylab = "Predicted Values", main = "Graph of Predicted Values")
+
+#add a legend
+legend(x = "topleft", legend = c("ap1","ap2","ap3"), lty = 1,
+       lwd = 1, col = c("green", "blue", "red"))
+#add lines
+lines(ap1, col = "green", lwd = 1)
+lines(ap2, col = "blue", lwd = 1)
+lines(ap3, col = "red", lwd = 1)
+
+# compare and select the best model based on AIC
+AIC(mod1, mod2, mod3)
+
+## plot() and wp()
+plot(mod3)
+wp(mod3)
+
+# transorming x
+# data(abdom)
+# assume that a transformation x^5 is required
+aa<-gamlss(default.payment.next.month~pb(x^.5),data=abdom, trace=FALSE)
+# predict at old values, e.g. case 610
+predict(aa, what="mu")[610]
+# predict at new data
+predict(aa,newdata=data.frame(x=abdom$x[610]))
+# now transform x first
+nx<-abdom$x^.5
+aaa<-gamlss(default.payment.next.month~pb(nx),data=abdom, trace=FALSE)
+# create a new data frame
+newd<-data.frame(abdom, nx=abdom$x^0.5)
+# predict at old values
+predict(aaa)[610]
+# predict at new values
+predict(aaa,newdata=data.frame(nx=abdom$x[610]^.5), data=newd)
+
+
+h<-gamlss(default.payment.next.month~pb(x), sigma.fo=~pb(x), family=TF, data=abdom)
+hall<-predictAll(h)
+hall
+
+hall1<-predictAll(h, output="matrix")
+hall1
+
+
+newabdom<-data.frame(x=c(20,25,30))
+hall2<-predictAll(h,newdata=newabdom)
+hall2
+hall21<-predictAll(h,newdata=newabdom, output="matrix")
+hall21
+
+#predict_pdf(h, newdata=newabdom, from=30, to=100)
+predict_pdf(h, newdata=abdom[10:20, ], from=30, to=100)
+
+pdf.plot(mu=hall2$mu, sigma=hall2$sigma, nu=hall2$nu, family=TF, min=100, 
+         max= 350, step=1)
+
+
+h<-gamlss(default.payment.next.month~pb(x),sigma.fo=~pb(x),family=TF,data=abdom,trace=FALSE)
+hall<-predictAll(h)
+
+
+newabdom<-data.frame(x=c(20,25,30))
+hall2<-predictAll(h,newdata=newabdom)
+
+par(cex.axis=1.5,cex.lab=1.5,cex.main=1.2)
+pdf.plot(mu=hall2$mu, sigma=hall2$sigma, nu=hall2$nu, family=TF, 
+         min=100, max= 350, step=1)
+```
+```
