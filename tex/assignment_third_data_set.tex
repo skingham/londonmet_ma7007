@@ -76,7 +76,7 @@ mbi <- gamlss(default.payment.next.month~LIMIT\_BAL+PAY\_0+PAY\_2+PAY\_3+PAY\_4+
 
 \subsubsection{Selecting a Distribution}
 
-The response variable \textbf{\verb|default.payment.next.month|} is a binary value on the default event: one as 'Yes', zero as 'No'.
+The response variable \textbf{\texttt{default.payment.next.month}} is a binary value on the default event: one as 'Yes', zero as 'No'.
 Binomial models are our only alternatives here. Manually fitting the different families show that the standard \textbf{Binomial Model}
 \verb|BI| gives the best AIC scoring.  This is fortunate as with testing a large number of explanatory variable using stepwise
 algorithms is already computationally expensive.
